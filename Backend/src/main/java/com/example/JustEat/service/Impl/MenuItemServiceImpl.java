@@ -1,9 +1,11 @@
 package com.example.JustEat.service.Impl;
 
 import com.example.JustEat.dto.request.CreateMenuItemRequest;
+import com.example.JustEat.dto.request.UpdateMenuItemRequest;
 import com.example.JustEat.dto.response.MenuItemResponse;
 import com.example.JustEat.entity.MenuItem;
 import com.example.JustEat.entity.Restaurant;
+import com.example.JustEat.exception.BadRequestException;
 import com.example.JustEat.exception.ForbiddenException;
 import com.example.JustEat.exception.NotFoundException;
 import com.example.JustEat.mapper.MenuItemMapper;
@@ -48,10 +50,63 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
+    public MenuItemResponse updateMenuItem(UUID restaurantId, Long menuItemId, UpdateMenuItemRequest request, UUID userId) {
+        Restaurant restaurant = restaurantRepository.findByPublicId(restaurantId).orElseThrow(()->new NotFoundException("Restaurant not found"));
+
+        MenuItem menuItem = menuItemRepository.findById(menuItemId).orElseThrow(()-> new NotFoundException("Menu item not found"));
+//        System.out.println("Item Restaurant PublicId: " + menuItem.getRestaurant().getPublicId());
+//        System.out.println("Request Restaurant PublicId: " + restaurant.getPublicId());
+        if (!restaurant.getOwner().getPublicId().equals(userId)) {
+            throw new ForbiddenException("Not authorized");
+        }
+
+        if(!menuItem.getRestaurant().getId().equals(restaurant.getId()))throw new BadRequestException("Menu item does not belong to this restaurant ");
+        if(request.getName()!=null){
+            menuItem.setName(request.getName());
+        }
+        if(request.getPrice()!=null){
+            menuItem.setPrice(request.getPrice());
+        }
+        if(request.getDescription()!=null){
+            menuItem.setDescription(request.getDescription());
+        }
+        if (request.getImageUrl() != null) {
+            menuItem.setImageUrl(request.getImageUrl());
+        }
+
+        if (request.getCuisineType() != null) {
+            menuItem.setCuisineType(request.getCuisineType());
+        }
+
+        if (request.getDietaryRestriction() != null) {
+            menuItem.setDietaryRestriction(request.getDietaryRestriction());
+        }
+
+        if (request.getIsSpecial() != null) {
+            menuItem.setSpecial(request.getIsSpecial());
+        }
+
+        if(request.getIsAvailable()!=null){
+            menuItem.setAvailable(request.getIsAvailable());
+        }
+        return MenuItemMapper.toResponse(menuItemRepository.save(menuItem));
+    }
+
+    @Override
+    public void deleteMenuItem(UUID restaurantId, Long menuItemId, UUID userId) {
+        Restaurant restaurant = restaurantRepository.findByPublicId(restaurantId).orElseThrow(()->new NotFoundException("Restaurant not found"));
+        MenuItem menuItem = menuItemRepository.findById(menuItemId).orElseThrow(()-> new NotFoundException("Menu Item not found"));
+        if(!restaurant.getOwner().getPublicId().equals(userId))throw new ForbiddenException("Not authorized");
+        if(!menuItem.getRestaurant().getId().equals(restaurant.getId()))throw new BadRequestException("Menu item does not belong to this restaurant");
+        menuItemRepository.delete(menuItem);
+    }
+
+    @Override
     public List<MenuItemResponse> getMenu(UUID restaurantId) {
         Restaurant restaurant = restaurantRepository.findByPublicId(restaurantId)
                 .orElseThrow(() -> new NotFoundException("Restaurant not found"));
-        return menuItemRepository.findByRestaurant_Id(restaurant.getId())
+        return menuItemRepository
+                .findByRestaurant_PublicIdAndIsAvailableTrue(restaurantId)
                 .stream()
                 .map(r -> MenuItemMapper.toResponse(r))
                 .toList();
