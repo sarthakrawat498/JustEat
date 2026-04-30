@@ -69,7 +69,7 @@ const RestaurantDetail = () => {
                 <img
                   src={restaurant.imageUrl}
                   alt={restaurant.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 flex items-center justify-center text-8xl">
@@ -126,37 +126,63 @@ const RestaurantDetail = () => {
               </div>
             ) : (
               <div
-                className="grid gap-4"
+                className="grid gap-5"
                 style={{
-                  gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
                 }}
               >
-                {menu.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md flex flex-col gap-2 ${
-                      !item.available ? "opacity-40" : ""
-                    }`}
-                  >
-                    <div className="font-bold text-base text-gray-900 dark:text-white">
-                      {item.name}
+                {menu
+                  .filter((item) => item.available !== false)
+                  .map((item) => (
+                    <div
+                      key={item.id}
+                      className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden flex flex-col"
+                    >
+                      {/* Photo */}
+                      <div className="w-full h-44 bg-orange-50 dark:bg-orange-900/20 flex-shrink-0">
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-5xl">
+                            🍴
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="p-4 flex flex-col gap-2 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="font-bold text-base text-gray-900 dark:text-white leading-tight">
+                            {item.name}
+                          </span>
+                          {item.isSpecial && (
+                            <span className="flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border border-yellow-300 dark:border-yellow-700">
+                              Chef&apos;s Special
+                            </span>
+                          )}
+                        </div>
+
+                        {item.description && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                            {item.description}
+                          </p>
+                        )}
+
+                        <div className="mt-auto pt-2 flex items-center justify-between gap-2">
+                          <span className="text-lg font-extrabold text-orange-500">
+                            ₹{Number(item.price).toFixed(2)}
+                          </span>
+                          <span className={dietCls(item.dietaryRestriction)}>
+                            {item.dietaryRestriction?.replace(/_/g, " ")}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-lg font-extrabold text-orange-500">
-                      ₹{item.price?.toFixed(2)}
-                    </div>
-                    <div className="flex justify-between items-center flex-wrap gap-2 mt-auto">
-                      <span className={dietCls(item.dietaryRestriction)}>
-                        {item.dietaryRestriction?.replace("_", " ") ||
-                          item.cuisineType}
-                      </span>
-                      {!item.available && (
-                        <span className="text-xs text-gray-400">
-                          Unavailable
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
           </>

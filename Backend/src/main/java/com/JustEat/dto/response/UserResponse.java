@@ -21,5 +21,5 @@ public class UserResponse {
     private Gender gender;
     private Role role;
     private Location location;
-    private String profileUrl;
+    private String profileImageUrl;
 }

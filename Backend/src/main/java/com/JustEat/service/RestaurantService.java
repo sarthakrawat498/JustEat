@@ -13,4 +13,5 @@ public interface RestaurantService {
     List<RestaurantResponse> getAllRestaurants(Location location);
     RestaurantResponse getRestaurant(UUID publicId);
     List<RestaurantResponse> getMyRestaurants();
+    RestaurantResponse updateRestaurantImage(UUID publicId, String imageUrl);
 }

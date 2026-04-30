@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { createRestaurant } from "../api/restaurantApi";
+import ImageUpload from "../components/ImageUpload";
 
 const LOCATIONS = ["NOIDA", "DELHI", "GURGAON"];
 const CUISINE_TYPES = [
@@ -137,17 +138,12 @@ const CreateRestaurant = () => {
                 </select>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className={labelCls}>Image URL</label>
-                <input
-                  name="imageUrl"
-                  placeholder="https://…"
-                  value={form.imageUrl}
-                  onChange={handleChange}
-                  required
-                  className={inputCls}
-                />
-              </div>
+              <ImageUpload
+                label="Restaurant Photo"
+                value={form.imageUrl}
+                onChange={(url) => setForm((f) => ({ ...f, imageUrl: url }))}
+                placeholder="Click to upload restaurant photo"
+              />
 
               <div className="flex flex-col gap-1.5">
                 <label className={labelCls}>Cuisine Types</label>

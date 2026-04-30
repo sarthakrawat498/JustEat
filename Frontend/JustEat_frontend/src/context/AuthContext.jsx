@@ -13,6 +13,12 @@ export const AuthProvider = ({ children }) => {
   const [userLocation, setUserLocation] = useState(() =>
     localStorage.getItem("userLocation"),
   );
+  const [profileUrl, setProfileUrl] = useState(
+    () => localStorage.getItem("profileUrl") || "",
+  );
+  const [profileName, setProfileName] = useState(
+    () => localStorage.getItem("profileName") || "",
+  );
 
   const login = async (credentials) => {
     const res = await loginService(credentials);
@@ -28,13 +34,26 @@ export const AuthProvider = ({ children }) => {
     return res;
   };
 
+  const updateProfileCache = (url, name) => {
+    const safeUrl = url || "";
+    const safeName = name || "";
+    localStorage.setItem("profileUrl", safeUrl);
+    localStorage.setItem("profileName", safeName);
+    setProfileUrl(safeUrl);
+    setProfileName(safeName);
+  };
+
   const logout = () => {
     logoutService();
     setToken(null);
     setRole(null);
     setUserId(null);
     setUserLocation(null);
+    setProfileUrl("");
+    setProfileName("");
     localStorage.removeItem("userLocation");
+    localStorage.removeItem("profileUrl");
+    localStorage.removeItem("profileName");
   };
 
   return (
@@ -44,8 +63,11 @@ export const AuthProvider = ({ children }) => {
         role,
         userId,
         userLocation,
+        profileUrl,
+        profileName,
         login,
         logout,
+        updateProfileCache,
         isAuthenticated: !!token,
       }}
     >

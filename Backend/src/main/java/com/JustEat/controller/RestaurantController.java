@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -39,5 +40,12 @@ public class RestaurantController {
     @PreAuthorize("hasRole('OWNER')")
     public List<RestaurantResponse> getMyRestaurants(){
         return restaurantService.getMyRestaurants();
+    }
+
+    @PatchMapping("/{publicId}/image")
+    @PreAuthorize("hasRole('OWNER')")
+    public RestaurantResponse updateImage(@PathVariable UUID publicId,
+                                          @RequestBody Map<String, String> body) {
+        return restaurantService.updateRestaurantImage(publicId, body.get("imageUrl"));
     }
 }

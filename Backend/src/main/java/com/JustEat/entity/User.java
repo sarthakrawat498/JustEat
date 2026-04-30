@@ -49,12 +49,11 @@ public class User extends BaseEntity {
     @NotNull
     private Location location;
 
-    private String profileUrl;
-
     @PrePersist
     public void generatePublicId() {
         if (publicId == null) {
             publicId = UUID.randomUUID();
         }
     }
+    private String profileImageUrl;
 }

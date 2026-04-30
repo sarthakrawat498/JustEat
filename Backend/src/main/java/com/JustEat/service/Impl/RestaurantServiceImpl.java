@@ -81,4 +81,17 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .map(RestaurantMapper::toResponse)
                 .toList();
     }
+
+    @Override
+    public RestaurantResponse updateRestaurantImage(UUID publicId, String imageUrl) {
+        String userIdStr = SecurityContextHolder.getContext().getAuthentication().getName();
+        UUID ownerId = UUID.fromString(userIdStr);
+        Restaurant restaurant = restaurantRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new NotFoundException("Restaurant not found"));
+        if (!restaurant.getOwner().getPublicId().equals(ownerId)) {
+            throw new BadRequestException("You do not own this restaurant");
+        }
+        restaurant.setImageUrl(imageUrl);
+        return RestaurantMapper.toResponse(restaurantRepository.save(restaurant));
+    }
 }

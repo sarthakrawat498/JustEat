@@ -6,6 +6,7 @@ import RestaurantDetail from "../pages/RestaurantDetail";
 import CreateRestaurant from "../pages/CreateRestaurant";
 import OwnerDashboard from "../pages/OwnerDashboard";
 import ManageRestaurant from "../pages/ManageRestaurant";
+import Profile from "../pages/Profile";
 import PrivateRoute from "../components/PrivateRoute";
 import { useAuth } from "../context/AuthContext";
 
@@ -60,6 +61,14 @@ const AppRoutes = () => (
         element={
           <PrivateRoute>
             <ManageRestaurant />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <PrivateRoute>
+            <Profile />
           </PrivateRoute>
         }
       />

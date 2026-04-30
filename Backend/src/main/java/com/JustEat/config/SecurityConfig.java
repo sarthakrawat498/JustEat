@@ -1,5 +1,6 @@
-package com.JustEat.security;
+package com.JustEat.config;
 
+import com.JustEat.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,7 +46,7 @@ public class SecurityConfig {
                 .csrf(csrf-> csrf.disable())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth->auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/**","/upload/**").permitAll()
                         .requestMatchers(
                                 "/auth/**",
                                 "/swagger-ui/**",

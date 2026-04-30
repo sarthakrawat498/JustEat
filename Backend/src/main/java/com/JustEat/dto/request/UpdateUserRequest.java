@@ -15,5 +15,5 @@ public class UpdateUserRequest {
     private String phoneNumber;
     private Location location;
     private Gender gender;
-    private String profileUrl;
+    private String profileImageUrl;
 }

@@ -17,7 +17,7 @@ public class UserMapper {
                 .role(Role.valueOf(user.getRole().name()))
                 .gender(Gender.valueOf(user.getGender().name()))
                 .location(Location.valueOf(user.getLocation().name()))
-                .profileUrl(user.getProfileUrl())
+                .profileImageUrl(user.getProfileImageUrl())
                 .build();
     }
 }

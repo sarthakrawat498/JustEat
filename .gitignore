@@ -13,6 +13,7 @@ Backend/.mvn/wrapper/maven-wrapper.jar
 Backend/*.class
 Backend/.env
 Backend/src/main/resources/application-local.properties
+Backend/src/main/resources/application.properties
 
 # ─── Java ─────────────────────────────────────────────────────────────────────
 *.class

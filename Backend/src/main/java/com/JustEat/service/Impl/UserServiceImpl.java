@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
         if(request.getPhoneNumber()!=null)user.setPhoneNumber(request.getPhoneNumber());
         if(request.getLocation()!=null)user.setLocation(request.getLocation());
         if(request.getGender()!=null)user.setGender(request.getGender());
-        if(request.getProfileUrl()!=null)user.setProfileUrl(request.getProfileUrl());
+        if(request.getProfileImageUrl()!=null)user.setProfileImageUrl(request.getProfileImageUrl());
         User updated = userRepository.save(user);
         return UserMapper.ToResponse(updated);
     }

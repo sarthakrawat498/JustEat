@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { getMyRestaurants } from "../api/restaurantApi";
+import { getMyRestaurants, updateRestaurantImage } from "../api/restaurantApi";
+import { uploadImage } from "../api/uploadApi";
 
 const statusCls = (status) => {
   const base =
@@ -19,6 +20,8 @@ const OwnerDashboard = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // track uploading state per restaurant publicId
+  const [uploading, setUploading] = useState({});
 
   useEffect(() => {
     getMyRestaurants()
@@ -26,6 +29,23 @@ const OwnerDashboard = () => {
       .catch(() => setError("Failed to load your restaurants."))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleImageUpload = async (publicId, file) => {
+    setUploading((u) => ({ ...u, [publicId]: true }));
+    try {
+      const url = await uploadImage(file);
+      await updateRestaurantImage(publicId, url);
+      setRestaurants((prev) =>
+        prev.map((r) =>
+          r.publicId === publicId ? { ...r, imageUrl: url } : r,
+        ),
+      );
+    } catch {
+      alert("Image upload failed. Please try again.");
+    } finally {
+      setUploading((u) => ({ ...u, [publicId]: false }));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -95,17 +115,71 @@ const OwnerDashboard = () => {
                 key={r.publicId}
                 className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md flex flex-col"
               >
-                {r.imageUrl ? (
-                  <img
-                    src={r.imageUrl}
-                    alt={r.name}
-                    className="w-full h-40 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-40 bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center text-4xl">
-                    🍽️
-                  </div>
-                )}
+                {/* Image area with upload overlay */}
+                <div className="relative w-full h-40 group">
+                  {r.imageUrl ? (
+                    <img
+                      src={r.imageUrl}
+                      alt={r.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center text-4xl">
+                      🍽️
+                    </div>
+                  )}
+
+                  {/* Upload button overlay */}
+                  <label
+                    className={`absolute inset-0 flex items-center justify-center cursor-pointer transition-all ${
+                      uploading[r.publicId]
+                        ? "bg-black/50"
+                        : "bg-black/0 group-hover:bg-black/40"
+                    }`}
+                  >
+                    {uploading[r.publicId] ? (
+                      <div className="flex flex-col items-center gap-1 text-white">
+                        <svg
+                          className="animate-spin w-7 h-7"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v8H4z"
+                          />
+                        </svg>
+                        <span className="text-xs font-semibold">
+                          Uploading...
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                        {r.imageUrl ? "Change Photo" : "Add Photo"}
+                      </span>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/jpg,image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      disabled={uploading[r.publicId]}
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) handleImageUpload(r.publicId, file);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
                 <div className="p-4 flex flex-col gap-2 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight">

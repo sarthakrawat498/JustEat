@@ -2,7 +2,6 @@ package com.JustEat.repository;
 
 import com.JustEat.entity.Order;
 import com.JustEat.entity.User;
-import com.example.JustEat.entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

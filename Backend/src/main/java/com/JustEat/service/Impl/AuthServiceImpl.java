@@ -37,6 +37,9 @@ public class AuthServiceImpl implements AuthService {
         user.setLocation(req.getLocation());
         user.setGender(req.getGender());
         user.setPhoneNumber(req.getPhoneNumber());
+        if(req.getProfileImageUrl()!=null){
+            user.setProfileImageUrl(req.getProfileImageUrl());
+        }
         userRepository.save(user);
     }
     public AuthResponse login(LoginRequest req){
