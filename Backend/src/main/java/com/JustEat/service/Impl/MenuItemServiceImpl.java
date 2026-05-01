@@ -7,11 +7,10 @@ import com.JustEat.entity.MenuItem;
 import com.JustEat.entity.Restaurant;
 import com.JustEat.exception.BadRequestException;
 import com.JustEat.exception.ForbiddenException;
-import com.JustEat.exception.NotFoundException;
 import com.JustEat.mapper.MenuItemMapper;
 import com.JustEat.repository.MenuItemRepository;
-import com.JustEat.repository.RestaurantRepository;
 import com.JustEat.service.MenuItemService;
+import com.JustEat.service.helper.EntityFetcher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,13 +20,12 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class MenuItemServiceImpl implements MenuItemService {
-    private final RestaurantRepository restaurantRepository;
     private final MenuItemRepository menuItemRepository;
+    private final EntityFetcher entityFetcher;
 
     @Override
     public MenuItemResponse addMenuItem(UUID restaurantId, CreateMenuItemRequest request, UUID userID) {
-        Restaurant restaurant = restaurantRepository.findByPublicId(restaurantId)
-                .orElseThrow(() -> new NotFoundException("Restaurant not found"));
+        Restaurant restaurant = entityFetcher.getRestaurant(restaurantId);
 
         if (!restaurant.getOwner().getPublicId().equals(userID)) {
             throw new ForbiddenException("Not authorized");
@@ -51,9 +49,9 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public MenuItemResponse updateMenuItem(UUID restaurantId, Long menuItemId, UpdateMenuItemRequest request, UUID userId) {
-        Restaurant restaurant = restaurantRepository.findByPublicId(restaurantId).orElseThrow(()->new NotFoundException("Restaurant not found"));
+        Restaurant restaurant = entityFetcher.getRestaurant(restaurantId);
 
-        MenuItem menuItem = menuItemRepository.findById(menuItemId).orElseThrow(()-> new NotFoundException("Menu item not found"));
+        MenuItem menuItem = entityFetcher.getMenuItem(menuItemId);
 //        System.out.println("Item Restaurant PublicId: " + menuItem.getRestaurant().getPublicId());
 //        System.out.println("Request Restaurant PublicId: " + restaurant.getPublicId());
         if (!restaurant.getOwner().getPublicId().equals(userId)) {
@@ -94,8 +92,8 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public void deleteMenuItem(UUID restaurantId, Long menuItemId, UUID userId) {
-        Restaurant restaurant = restaurantRepository.findByPublicId(restaurantId).orElseThrow(()->new NotFoundException("Restaurant not found"));
-        MenuItem menuItem = menuItemRepository.findById(menuItemId).orElseThrow(()-> new NotFoundException("Menu Item not found"));
+        Restaurant restaurant = entityFetcher.getRestaurant(restaurantId);
+        MenuItem menuItem = entityFetcher.getMenuItem(menuItemId);
         if(!restaurant.getOwner().getPublicId().equals(userId))throw new ForbiddenException("Not authorized");
         if(!menuItem.getRestaurant().getId().equals(restaurant.getId()))throw new BadRequestException("Menu item does not belong to this restaurant");
         menuItemRepository.delete(menuItem);
@@ -103,8 +101,7 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public List<MenuItemResponse> getMenu(UUID restaurantId) {
-        Restaurant restaurant = restaurantRepository.findByPublicId(restaurantId)
-                .orElseThrow(() -> new NotFoundException("Restaurant not found"));
+        Restaurant restaurant = entityFetcher.getRestaurant(restaurantId);
         return menuItemRepository
                 .findByRestaurant_PublicIdAndIsAvailableTrue(restaurantId)
                 .stream()

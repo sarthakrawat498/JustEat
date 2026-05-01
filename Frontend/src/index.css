@@ -3,11 +3,19 @@
 /* class-based dark mode: add `.dark` to <html> */
 @custom-variant dark (&:where(.dark, .dark *));
 
+html {
+  height: 100%;
+}
+
 body {
+  height: 100%;
+  overflow: hidden; /* scroll is handled by #root so body never scrolls */
   font-family: "Segoe UI", system-ui, sans-serif;
   @apply bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white;
 }
 
 #root {
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto; /* single scroll container — prevents phantom scrollbar */
+  overflow-x: hidden;
 }

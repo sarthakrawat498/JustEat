@@ -4,6 +4,7 @@ import com.JustEat.dto.request.CreateMenuItemRequest;
 import com.JustEat.dto.request.UpdateMenuItemRequest;
 import com.JustEat.dto.response.MenuItemResponse;
 import com.JustEat.service.MenuItemService;
+import com.JustEat.util.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,9 +23,7 @@ public class MenuItemController {
     @PostMapping
     public MenuItemResponse addMenuItem(@PathVariable UUID restaurantId,
                                         @RequestBody @Valid CreateMenuItemRequest request){
-        UUID userId = UUID.fromString(
-                SecurityContextHolder.getContext().getAuthentication().getName()
-        );
+        UUID userId = SecurityUtils.getCurrentUserId();
         return menuItemService.addMenuItem(restaurantId, request, userId);
     }
 
@@ -36,18 +35,14 @@ public class MenuItemController {
     @PatchMapping("/{menuItemId}")
     @PreAuthorize("hasRole('OWNER')")
     public MenuItemResponse updateMenuItem(@PathVariable UUID restaurantId, @PathVariable Long menuItemId, @RequestBody UpdateMenuItemRequest request){
-        UUID userId = UUID.fromString(
-                SecurityContextHolder.getContext().getAuthentication().getName()
-        );
+        UUID userId = SecurityUtils.getCurrentUserId();
         return menuItemService.updateMenuItem(restaurantId, menuItemId, request, userId);
     }
 
     @DeleteMapping("/{menuItemId}")
     @PreAuthorize("hasRole('OWNER')")
     public void deleteMenuItem(@PathVariable UUID restaurantId, @PathVariable Long menuItemId ){
-        UUID userId = UUID.fromString(
-                SecurityContextHolder.getContext().getAuthentication().getName()
-        );
+        UUID userId = SecurityUtils.getCurrentUserId();
         menuItemService.deleteMenuItem(restaurantId,menuItemId,userId);
     }
 }

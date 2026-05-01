@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { getRestaurant } from "../api/restaurantApi";
 import { getMenu } from "../api/menuApi";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 const dietCls = (d) => {
   const base = "text-xs font-bold px-2.5 py-0.5 rounded-full border";
@@ -27,6 +29,30 @@ const RestaurantDetail = () => {
   const [menu, setMenu] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { addToCart, cart } = useCart();
+  const { role } = useAuth();
+  const [addingItemId, setAddingItemId] = useState(null);
+  const [addedItemId, setAddedItemId] = useState(null);
+
+  // Helper: get quantity of item currently in cart
+  const getCartQty = (menuItemId) =>
+    cart?.items?.find((i) => i.menuItemId === menuItemId)?.quantity ?? 0;
+
+  const handleAddToCart = async (item) => {
+    if (role !== "CUSTOMER") return;
+    setAddingItemId(item.id);
+    try {
+      await addToCart(item.id, 1);
+      setAddedItemId(item.id);
+      setTimeout(() => setAddedItemId(null), 1500);
+    } catch (err) {
+      // cross-restaurant cart conflict
+      const msg = err?.response?.data?.message || "";
+      if (msg) alert(msg);
+    } finally {
+      setAddingItemId(null);
+    }
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -180,6 +206,29 @@ const RestaurantDetail = () => {
                             {item.dietaryRestriction?.replace(/_/g, " ")}
                           </span>
                         </div>
+
+                        {role === "CUSTOMER" && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <button
+                              onClick={() => handleAddToCart(item)}
+                              disabled={addingItemId === item.id}
+                              className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white text-xs font-bold py-1.5 rounded-lg transition-all cursor-pointer border-none flex items-center justify-center gap-1"
+                            >
+                              {addingItemId === item.id ? (
+                                <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              ) : addedItemId === item.id ? (
+                                "✓ Added!"
+                              ) : (
+                                "+ Add"
+                              )}
+                            </button>
+                            {getCartQty(item.id) > 0 && (
+                              <span className="text-xs font-semibold text-orange-500 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-full px-2 py-0.5">
+                                {getCartQty(item.id)} in cart
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

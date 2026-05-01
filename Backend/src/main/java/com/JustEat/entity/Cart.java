@@ -18,11 +18,12 @@ public class Cart extends BaseEntity{
     @JoinColumn(name = "user_id", nullable = false,unique = true)
     private User user;
 
-    @NotNull(message = "A restaurant must be selected to start a cart")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL , orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
+
+    private Double totalAmount = 0.0 ;
 }

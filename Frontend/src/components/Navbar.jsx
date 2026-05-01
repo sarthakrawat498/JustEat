@@ -2,10 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { useCart } from "../context/CartContext";
 
 const Navbar = () => {
   const { logout, role, profileUrl, profileName } = useAuth();
   const { dark, toggle } = useTheme();
+  const { cartItemCount } = useCart();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -43,6 +45,22 @@ const Navbar = () => {
           <Link to="/create-restaurant">
             <button className="border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white font-semibold text-sm px-4 py-2 rounded-lg transition-all cursor-pointer bg-transparent">
               + Add Restaurant
+            </button>
+          </Link>
+        )}
+
+        {role === "CUSTOMER" && (
+          <Link to="/cart" className="relative">
+            <button
+              title="View Cart"
+              className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-orange-50 dark:hover:bg-orange-900/30 hover:text-orange-500 w-9 h-9 rounded-lg transition-all flex items-center justify-center cursor-pointer border-none text-base relative"
+            >
+              🛒
+              {cartItemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-bold w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full flex items-center justify-center leading-none px-1">
+                  {cartItemCount > 99 ? "99+" : cartItemCount}
+                </span>
+              )}
             </button>
           </Link>
         )}

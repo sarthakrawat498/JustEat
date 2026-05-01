@@ -99,37 +99,41 @@ Enable users to build and manage their cart.
 
 ## 👤 User Capabilities
 
-- Add items to cart
-- Update item quantity
-- Remove items
-- View cart
+- Add items to cart from restaurant detail page
+- Update item quantity in cart (+ / −)
+- Remove individual items
+- View cart with live total
+- Cart persists across page refreshes
 
 ## 🔧 Backend
 
 - Cart Entity
 - CartItem Entity
 - APIs:
-  - Add to cart
-  - Remove item
-  - Update quantity
-  - Get cart
-  - Clear cart
+  - `POST /cart/add-item` — add item with quantity
+  - `PATCH /cart/update-item` — update item quantity (0 removes item)
+  - `DELETE /cart/remove-item/{menuItemId}` — remove specific item
+  - `GET /cart` — fetch cart with restaurant name, total, and items
 
 ## 🎨 Frontend
 
-- Add to cart button
-- Cart page
-- Quantity controls (+ / -)
-- Remove item option
+- **`cartApi.js`** — API layer for all cart endpoints
+- **`CartContext.jsx`** — global cart state with `addToCart`, `updateCartItem`, `removeCartItem`, `fetchCart`, `clearCart`, and `cartItemCount`; auto-fetches on mount for CUSTOMER role
+- **`RestaurantDetail.jsx`** — "+ Add" button per menu item with loading spinner, "✓ Added!" flash, and "N in cart" badge; only visible to CUSTOMER
+- **`Navbar.jsx`** — 🛒 cart icon with live orange badge showing item count; only visible to CUSTOMER
+- **`Cart.jsx`** — full cart page with item list, quantity controls, order summary, and total
 
 ## 🔗 Integration
 
-- Add to cart updates backend
-- Cart reflects real-time changes
+- Add to cart updates backend, then re-fetches cart state
+- Cart badge in navbar reflects live count
+- Cross-restaurant cart conflict surfaces backend error via alert
+- `CartProvider` wraps app in `main.jsx`
+- `/cart` route added as a `PrivateRoute`
 
 ## ✅ Outcome
 
-User successfully builds and manages a cart
+User adds items from any restaurant → cart updates in real time → views and manages cart via dedicated cart page
 
 ---
 
@@ -189,7 +193,7 @@ Add advanced and optional features after core functionality.
 
 - ✅ Sprint 1 — Completed (Frontend + Backend)
 - ✅ Sprint 2 — Completed (Frontend + Backend)
-- ⏳ Sprint 3 — Not Started
+- ✅ Sprint 3 — Completed (Frontend + Backend)
 - ⏳ Sprint 4 — Not Started
 - ⏳ Sprint 5 — Not Started
 
@@ -197,7 +201,7 @@ Add advanced and optional features after core functionality.
 
 # 🚀 Next Step
 
-👉 Begin Sprint 3 (Cart System — Core Application Flow)
+👉 Begin Sprint 4 (Order Flow — Checkout, Order History)
 
 ---
 

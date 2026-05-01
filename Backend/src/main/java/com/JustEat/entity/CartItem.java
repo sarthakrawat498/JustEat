@@ -28,4 +28,6 @@ public class CartItem extends BaseEntity{
     @Min(value = 1, message = "Quantity must be at least 1")
     @Max(value = 99, message = "Quantity cannot exceed 99 per item")
     private int quantity;
+
+    private Double price;
 }

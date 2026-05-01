@@ -7,13 +7,12 @@ import com.JustEat.entity.User;
 import com.JustEat.enums.Location;
 import com.JustEat.enums.RestaurantStatus;
 import com.JustEat.exception.BadRequestException;
-import com.JustEat.exception.NotFoundException;
 import com.JustEat.mapper.RestaurantMapper;
 import com.JustEat.repository.RestaurantRepository;
-import com.JustEat.repository.UserRepository;
 import com.JustEat.service.RestaurantService;
+import com.JustEat.service.helper.EntityFetcher;
+import com.JustEat.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,15 +20,13 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class RestaurantServiceImpl implements RestaurantService {
-    private final UserRepository userRepository;
     private final RestaurantRepository restaurantRepository;
+    private final EntityFetcher entityFetcher;
     @Override
     public Restaurant createRestaurant(CreateRestaurantRequest request) {
         //get current user from jwt
-        String userIdStr = SecurityContextHolder.getContext().getAuthentication().getName();
-        //System.out.println("auth name : " + userIdStr);
-        UUID userId = UUID.fromString(userIdStr);
-        User owner = userRepository.findByPublicId(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        UUID userId = SecurityUtils.getCurrentUserId();
+        User owner = entityFetcher.getUser(userId);
 
         //create restaurant
         Restaurant restaurant = new Restaurant();
@@ -60,8 +57,7 @@ public class RestaurantServiceImpl implements RestaurantService {
     }
 
     public RestaurantResponse getRestaurant(UUID publicId){
-        Restaurant restaurant = restaurantRepository.findByPublicId(publicId)
-                .orElseThrow(()-> new NotFoundException("Restaurant not found"));
+        Restaurant restaurant = entityFetcher.getRestaurant(publicId);
         validateRestaurantOpen(restaurant);
         return RestaurantMapper.toResponse(restaurant);
     }
@@ -74,8 +70,7 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     public List<RestaurantResponse> getMyRestaurants() {
-        String userIdStr = SecurityContextHolder.getContext().getAuthentication().getName();
-        UUID ownerId = UUID.fromString(userIdStr);
+        UUID ownerId = SecurityUtils.getCurrentUserId();
         return restaurantRepository.findByOwnerPublicId(ownerId)
                 .stream()
                 .map(RestaurantMapper::toResponse)
@@ -84,10 +79,8 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     public RestaurantResponse updateRestaurantImage(UUID publicId, String imageUrl) {
-        String userIdStr = SecurityContextHolder.getContext().getAuthentication().getName();
-        UUID ownerId = UUID.fromString(userIdStr);
-        Restaurant restaurant = restaurantRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new NotFoundException("Restaurant not found"));
+        UUID ownerId = SecurityUtils.getCurrentUserId();
+        Restaurant restaurant = entityFetcher.getRestaurant(publicId);
         if (!restaurant.getOwner().getPublicId().equals(ownerId)) {
             throw new BadRequestException("You do not own this restaurant");
         }
