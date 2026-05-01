@@ -2,6 +2,7 @@ package com.JustEat.service.Impl;
 
 import com.JustEat.dto.request.CreateRestaurantRequest;
 import com.JustEat.dto.response.RestaurantResponse;
+import com.JustEat.entity.MenuItem;
 import com.JustEat.entity.Restaurant;
 import com.JustEat.entity.User;
 import com.JustEat.enums.Location;
@@ -14,6 +15,7 @@ import com.JustEat.service.helper.EntityFetcher;
 import com.JustEat.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -56,8 +58,8 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .toList();
     }
 
-    public RestaurantResponse getRestaurant(UUID publicId){
-        Restaurant restaurant = entityFetcher.getRestaurant(publicId);
+    public RestaurantResponse getRestaurant(UUID restaurantId){
+        Restaurant restaurant = entityFetcher.getRestaurant(restaurantId);
         validateRestaurantOpen(restaurant);
         return RestaurantMapper.toResponse(restaurant);
     }
@@ -78,13 +80,24 @@ public class RestaurantServiceImpl implements RestaurantService {
     }
 
     @Override
-    public RestaurantResponse updateRestaurantImage(UUID publicId, String imageUrl) {
+    public RestaurantResponse updateRestaurantImage(UUID restaurantId, String imageUrl) {
         UUID ownerId = SecurityUtils.getCurrentUserId();
-        Restaurant restaurant = entityFetcher.getRestaurant(publicId);
+        Restaurant restaurant = entityFetcher.getRestaurant(restaurantId);
         if (!restaurant.getOwner().getPublicId().equals(ownerId)) {
             throw new BadRequestException("You do not own this restaurant");
         }
         restaurant.setImageUrl(imageUrl);
         return RestaurantMapper.toResponse(restaurantRepository.save(restaurant));
+    }
+
+    @Override
+    public void updateRestaurantStatus(UUID restaurantId, RestaurantStatus status, UUID ownerId) {
+        User owner = entityFetcher.getUser(ownerId);
+        Restaurant restaurant = entityFetcher.getRestaurant(restaurantId);
+        if(!restaurant.getOwner().getPublicId().equals(ownerId)){
+            throw new BadRequestException("Not your restaurant");
+        }
+        restaurant.setStatus(status);
+        restaurantRepository.save(restaurant);
     }
 }

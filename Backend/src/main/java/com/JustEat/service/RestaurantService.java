@@ -4,6 +4,7 @@ import com.JustEat.dto.request.CreateRestaurantRequest;
 import com.JustEat.dto.response.RestaurantResponse;
 import com.JustEat.entity.Restaurant;
 import com.JustEat.enums.Location;
+import com.JustEat.enums.RestaurantStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -11,7 +12,8 @@ import java.util.UUID;
 public interface RestaurantService {
     Restaurant createRestaurant(CreateRestaurantRequest request);
     List<RestaurantResponse> getAllRestaurants(Location location);
-    RestaurantResponse getRestaurant(UUID publicId);
+    RestaurantResponse getRestaurant(UUID restaurantId);
     List<RestaurantResponse> getMyRestaurants();
-    RestaurantResponse updateRestaurantImage(UUID publicId, String imageUrl);
+    RestaurantResponse updateRestaurantImage(UUID restaurantId, String imageUrl);
+    void updateRestaurantStatus(UUID restaurantId, RestaurantStatus status, UUID ownerId);
 }

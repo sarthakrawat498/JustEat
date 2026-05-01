@@ -11,3 +11,6 @@ export const getMyRestaurants = () => api.get("/restaurants/my");
 
 export const updateRestaurantImage = (publicId, imageUrl) =>
   api.patch(`/restaurants/${publicId}/image`, { imageUrl });
+
+export const updateRestaurantStatus = (publicId, status) =>
+  api.patch(`/owner/restaurants/${publicId}/status`, { status });

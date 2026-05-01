@@ -11,3 +11,6 @@ export const updateMenuItem = (restaurantId, menuItemId, data) =>
 
 export const deleteMenuItem = (restaurantId, menuItemId) =>
   api.delete(`/restaurants/${restaurantId}/menu/${menuItemId}`);
+
+export const updateMenuItemAvailability = (menuItemId, available) =>
+  api.patch(`/owner/menu/${menuItemId}/availability`, { available });

@@ -78,12 +78,20 @@ const Cart = () => {
             <p className="text-sm text-green-600 dark:text-green-500 mb-4">
               Your order has been successfully placed. Enjoy your meal!
             </p>
-            <button
-              onClick={() => navigate("/")}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2 rounded-lg transition-all cursor-pointer border-none text-sm"
-            >
-              Back to Home
-            </button>
+            <div className="flex gap-3 justify-center flex-wrap">
+              <button
+                onClick={() => navigate("/orders")}
+                className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2 rounded-lg transition-all cursor-pointer border-none text-sm"
+              >
+                View My Orders
+              </button>
+              <button
+                onClick={() => navigate("/")}
+                className="border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white font-semibold px-6 py-2 rounded-lg transition-all cursor-pointer bg-transparent text-sm"
+              >
+                Back to Home
+              </button>
+            </div>
           </div>
         )}
 

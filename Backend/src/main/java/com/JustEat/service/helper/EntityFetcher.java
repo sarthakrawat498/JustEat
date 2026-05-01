@@ -17,6 +17,7 @@ public class EntityFetcher {
     private final MenuItemRepository menuItemRepository;
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
+    private final OrderRepository orderRepository;
 
     public User getUser(UUID userId) {
         return userRepository.findByPublicId(userId)
@@ -41,5 +42,8 @@ public class EntityFetcher {
         return cartItemRepository.findByCartAndMenuItem(cart,menuItem)
                 .orElseThrow(()->new BadRequestException("Item not in cart"));
     }
-
+    public Order getOrder(Long id){
+        return orderRepository.findById(id)
+                .orElseThrow(()-> new NotFoundException("Order not found"));
+    }
 }

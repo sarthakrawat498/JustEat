@@ -50,6 +50,25 @@ const Navbar = () => {
         )}
 
         {role === "CUSTOMER" && (
+          <Link to="/orders">
+            <button
+              title="My Orders"
+              className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/30 hover:text-orange-500 w-9 h-9 rounded-lg transition-all flex items-center justify-center cursor-pointer border-none text-base"
+            >
+              📋
+            </button>
+          </Link>
+        )}
+
+        {role === "OWNER" && (
+          <Link to="/owner/orders">
+            <button className="border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-orange-500 hover:text-orange-500 font-semibold text-sm px-4 py-2 rounded-lg transition-all cursor-pointer bg-transparent">
+              Orders
+            </button>
+          </Link>
+        )}
+
+        {role === "CUSTOMER" && (
           <Link to="/cart" className="relative">
             <button
               title="View Cart"

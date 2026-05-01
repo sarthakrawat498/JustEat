@@ -194,14 +194,14 @@ Add advanced and optional features after core functionality.
 - ✅ Sprint 1 — Completed (Frontend + Backend)
 - ✅ Sprint 2 — Completed (Frontend + Backend)
 - ✅ Sprint 3 — Completed (Frontend + Backend)
-- ⏳ Sprint 4 — Not Started
+- ✅ Sprint 4 — Completed (Frontend + Backend)
 - ⏳ Sprint 5 — Not Started
 
 ---
 
 # 🚀 Next Step
 
-👉 Begin Sprint 4 (Order Flow — Checkout, Order History)
+👉 Begin Sprint 5 (Enhancements — Ratings, Search/Filter, Owner Dashboard improvements)
 
 ---
 

@@ -5,6 +5,7 @@ import com.JustEat.dto.request.UpdateMenuItemRequest;
 import com.JustEat.dto.response.MenuItemResponse;
 import com.JustEat.entity.MenuItem;
 import com.JustEat.entity.Restaurant;
+import com.JustEat.entity.User;
 import com.JustEat.exception.BadRequestException;
 import com.JustEat.exception.ForbiddenException;
 import com.JustEat.mapper.MenuItemMapper;
@@ -13,6 +14,7 @@ import com.JustEat.service.MenuItemService;
 import com.JustEat.service.helper.EntityFetcher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -107,5 +109,15 @@ public class MenuItemServiceImpl implements MenuItemService {
                 .stream()
                 .map(r -> MenuItemMapper.toResponse(r))
                 .toList();
+    }
+    @Transactional
+    @Override
+    public void updateMenuItemAvailability(Long menuItemId, boolean available, UUID ownerId) {
+        User owner = entityFetcher.getUser(ownerId);
+        MenuItem item = entityFetcher.getMenuItem(menuItemId);
+
+        if(!item.getRestaurant().getOwner().getPublicId().equals(ownerId))throw new BadRequestException("Not your menu item");
+
+        item.setAvailable(available);
     }
 }

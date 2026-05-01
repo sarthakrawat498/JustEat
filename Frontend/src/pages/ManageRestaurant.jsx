@@ -7,7 +7,7 @@ import {
   updateMenuItem,
   deleteMenuItem,
 } from "../api/menuApi";
-import { getRestaurant } from "../api/restaurantApi";
+import { getRestaurant, updateRestaurantStatus } from "../api/restaurantApi";
 import ImageUpload from "../components/ImageUpload";
 
 const CUISINE_TYPES = [
@@ -220,6 +220,7 @@ const ManageRestaurant = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
+  const [statusToggling, setStatusToggling] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
   const flash = (msg) => {
@@ -315,6 +316,26 @@ const ManageRestaurant = () => {
     }
   };
 
+  const handleRestaurantStatusToggle = async () => {
+    if (!restaurant) return;
+    const newStatus =
+      restaurant.restaurantStatus === "OPEN" ? "CLOSED" : "OPEN";
+    setStatusToggling(true);
+    try {
+      await updateRestaurantStatus(publicId, newStatus);
+      setRestaurant((r) => ({ ...r, restaurantStatus: newStatus }));
+      flash(
+        `Restaurant is now ${newStatus === "OPEN" ? "Open 🟢" : "Closed 🔴"}.`,
+      );
+    } catch (err) {
+      flash(
+        err?.response?.data?.message || "Failed to update restaurant status.",
+      );
+    } finally {
+      setStatusToggling(false);
+    }
+  };
+
   if (loadingPage)
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -362,9 +383,30 @@ const ManageRestaurant = () => {
 
         <div className="flex items-start justify-between mb-6 mt-1">
           <div>
-            <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white">
-              {restaurant?.name}
-            </h1>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white">
+                {restaurant?.name}
+              </h1>
+              <button
+                onClick={handleRestaurantStatusToggle}
+                disabled={statusToggling}
+                className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                  restaurant?.restaurantStatus === "OPEN"
+                    ? "bg-green-50 dark:bg-green-900/20 border-green-400 dark:border-green-600 text-green-700 dark:text-green-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-400 hover:text-red-600"
+                    : "bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-600 text-red-700 dark:text-red-400 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-400 hover:text-green-600"
+                }`}
+                title={`Click to ${restaurant?.restaurantStatus === "OPEN" ? "close" : "open"} restaurant`}
+              >
+                {statusToggling ? (
+                  <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <span>
+                    {restaurant?.restaurantStatus === "OPEN" ? "🟢" : "🔴"}
+                  </span>
+                )}
+                {restaurant?.restaurantStatus ?? "OPEN"}
+              </button>
+            </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {restaurant?.location} &middot; Manage menu items
             </p>

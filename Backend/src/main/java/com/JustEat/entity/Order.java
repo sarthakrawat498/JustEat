@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -33,6 +34,9 @@ public class Order extends BaseEntity{
     @Enumerated(EnumType.STRING)
     @NotNull
     private OrderStatus status = OrderStatus.PENDING;
+
+    @OneToMany(mappedBy = "order" , cascade = CascadeType.ALL)
+    private List<OrderItem> orderItems;
 
     @PrePersist
     public void generatePublicId() {

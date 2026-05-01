@@ -8,6 +8,8 @@ import OwnerDashboard from "../pages/OwnerDashboard";
 import ManageRestaurant from "../pages/ManageRestaurant";
 import Profile from "../pages/Profile";
 import Cart from "../pages/Cart";
+import OrderHistory from "../pages/OrderHistory";
+import OwnerOrders from "../pages/OwnerOrders";
 import PrivateRoute from "../components/PrivateRoute";
 import { useAuth } from "../context/AuthContext";
 
@@ -78,6 +80,22 @@ const AppRoutes = () => (
         element={
           <PrivateRoute>
             <Cart />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/orders"
+        element={
+          <PrivateRoute>
+            <OrderHistory />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/owner/orders"
+        element={
+          <PrivateRoute>
+            <OwnerOrders />
           </PrivateRoute>
         }
       />
