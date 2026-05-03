@@ -1,5 +1,7 @@
 package com.JustEat.controller;
 
+import com.JustEat.dto.request.ForgotPasswordRequest;
+import com.JustEat.dto.request.ResetPasswordRequest;
 import com.JustEat.dto.response.AuthResponse;
 import com.JustEat.dto.request.LoginRequest;
 import com.JustEat.dto.request.RegisterRequest;
@@ -26,4 +28,15 @@ public class AuthController {
     public AuthResponse login(@RequestBody LoginRequest request){
         return authService.login(request);
     }
+
+    @PostMapping("/forgot-password")
+    public void forgotPassword(@RequestBody ForgotPasswordRequest request){
+        authService.forgotPassword(request);
+    }
+
+    @PostMapping("/reset-password")
+    public void resetPassword(@RequestBody ResetPasswordRequest request){
+        authService.resetPassword(request);
+    }
+
 }
