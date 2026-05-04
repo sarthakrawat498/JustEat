@@ -1,6 +1,7 @@
 package com.JustEat.service;
 
 import com.JustEat.dto.response.OrderResponse;
+import com.JustEat.dto.response.RepeatedOrderResponse;
 import com.JustEat.enums.OrderStatus;
 
 import java.util.List;
@@ -11,4 +12,5 @@ public interface OrderService {
     List<OrderResponse> getUserOrders(UUID userId);
     List<OrderResponse> getOwnerOrders(UUID ownerID);
     void updateOrderStatus(Long orderId, OrderStatus newStatus, UUID ownerId);
+    RepeatedOrderResponse repeatOrder(Long orderId, UUID userId);
 }

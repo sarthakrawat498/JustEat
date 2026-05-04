@@ -2,6 +2,8 @@ package com.JustEat.service.Impl;
 
 import com.JustEat.dto.response.OrderItemResponse;
 import com.JustEat.dto.response.OrderResponse;
+import com.JustEat.dto.response.RepeatedItem;
+import com.JustEat.dto.response.RepeatedOrderResponse;
 import com.JustEat.entity.*;
 import com.JustEat.enums.OrderStatus;
 import com.JustEat.enums.RestaurantStatus;
@@ -11,11 +13,14 @@ import com.JustEat.repository.CartRepository;
 import com.JustEat.repository.OrderItemRepository;
 import com.JustEat.repository.OrderRepository;
 import com.JustEat.service.OrderService;
+import com.JustEat.service.helper.CartHelper;
 import com.JustEat.service.helper.EntityFetcher;
+import com.JustEat.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -99,6 +104,80 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(newStatus);
     }
 
+    @Transactional
+    @Override
+    public RepeatedOrderResponse repeatOrder(Long orderId, UUID userId) {
+        User user = entityFetcher.getUser(userId);
+        Order order = entityFetcher.getOrder(orderId);
+
+        if (!order.getUser().getPublicId().equals(userId)) {
+            throw new BadRequestException("Not your order");
+        }
+        Cart cart = cartRepository.findByUser(user)
+                .orElseGet(() -> {
+                    Cart c = new Cart();
+                    c.setUser(user);
+                    return cartRepository.save(c);
+                });
+
+        Restaurant restaurant = order.getRestaurant();
+        if (cart.getRestaurant() != null &&
+                !cart.getRestaurant().getId().equals(restaurant.getId())) {
+
+            cart.getItems().clear();
+            cart.setRestaurant(null);
+            cart.setTotalAmount(0.0);
+        }
+
+        cart.setRestaurant(restaurant);
+
+        List<RepeatedItem> added = new ArrayList<>();
+        List<RepeatedItem> unavailable = new ArrayList<>();
+        List<RepeatedItem> priceChanged = new ArrayList<>();
+
+        for (OrderItem orderItem : order.getOrderItems()) {
+
+            MenuItem menuItem = orderItem.getMenuItem();
+            if (!menuItem.isAvailable()) {
+                unavailable.add(buildItem(orderItem, menuItem, null));
+                continue;
+            }
+
+            double oldPrice = orderItem.getPrice();
+            double newPrice = menuItem.getPrice() * orderItem.getQuantity();
+            CartItem cartItem = new CartItem();
+            cartItem.setCart(cart);
+            cartItem.setMenuItem(menuItem);
+            cartItem.setQuantity(orderItem.getQuantity());
+            cartItem.setPrice(newPrice);
+
+            cart.getItems().add(cartItem);
+
+            //to handle the precision issues
+            if (Math.abs(oldPrice - newPrice) > 0.01) {
+                priceChanged.add(buildItem(orderItem, menuItem, newPrice));
+            } else {
+                added.add(buildItem(orderItem, menuItem, null));
+            }
+        }
+        CartHelper.updateCartTotal(cart);
+
+        return RepeatedOrderResponse.builder()
+                .addedItems(added)
+                .unavailableItems(unavailable)
+                .priceChangedItems(priceChanged)
+                .build();
+    }
+
+    private RepeatedItem buildItem(OrderItem orderItem, MenuItem menuItem, Double newPrice) {
+        return RepeatedItem.builder()
+                .menuItemId(menuItem.getId())
+                .name(menuItem.getName())
+                .quantity(orderItem.getQuantity())
+                .oldPrice(orderItem.getPrice())
+                .newPrice(newPrice)
+                .build();
+    }
     private void validateStatusTransition(OrderStatus current , OrderStatus next){
         switch (current){
             case PENDING -> {

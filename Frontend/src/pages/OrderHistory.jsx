@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { getUserOrders } from "../api/orderApi";
+import { getUserOrders, repeatOrder } from "../api/orderApi";
+import { useCart } from "../context/CartContext";
 
 const statusCls = (status) => {
   const base =
@@ -15,11 +16,107 @@ const statusCls = (status) => {
   return map[status] || base;
 };
 
+const formatDate = (iso) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+/* ---------- Repeat Result Modal ---------- */
+const RepeatModal = ({ result, onClose, onGoToCart }) => {
+  const { addedItems = [], priceChangedItems = [], unavailableItems = [] } = result;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6">
+        <h2 className="text-lg font-extrabold text-gray-900 dark:text-white mb-4">
+          Order Added to Cart
+        </h2>
+
+        {addedItems.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-wider mb-1.5">
+              ✓ Added ({addedItems.length})
+            </p>
+            <div className="flex flex-col gap-1">
+              {addedItems.map((item, i) => (
+                <div key={i} className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                  <span>{item.name} × {item.quantity}</span>
+                  <span className="font-semibold">₹{Number(item.oldPrice).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {priceChangedItems.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-wider mb-1.5">
+              ⚠ Price Changed ({priceChangedItems.length})
+            </p>
+            <div className="flex flex-col gap-1">
+              {priceChangedItems.map((item, i) => (
+                <div key={i} className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                  <span>{item.name} × {item.quantity}</span>
+                  <span className="font-semibold">
+                    <span className="line-through text-gray-400 mr-1">₹{Number(item.oldPrice).toFixed(2)}</span>
+                    <span className="text-orange-500">₹{Number(item.newPrice).toFixed(2)}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {unavailableItems.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-bold text-red-500 dark:text-red-400 uppercase tracking-wider mb-1.5">
+              ✗ Unavailable ({unavailableItems.length})
+            </p>
+            <div className="flex flex-col gap-1">
+              {unavailableItems.map((item, i) => (
+                <div key={i} className="text-sm text-gray-400 dark:text-gray-500 line-through">
+                  {item.name} × {item.quantity}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2 mt-6">
+          <button
+            onClick={onGoToCart}
+            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 rounded-lg text-sm transition-colors cursor-pointer border-none"
+          >
+            Go to Cart
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-2.5 rounded-lg text-sm transition-colors cursor-pointer border-none"
+          >
+            Stay Here
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ---------- Main Component ---------- */
 const OrderHistory = () => {
   const navigate = useNavigate();
+  const { fetchCart } = useCart();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [repeating, setRepeating] = useState(null); // orderId being repeated
+  const [repeatResult, setRepeatResult] = useState(null); // modal data
 
   useEffect(() => {
     getUserOrders()
@@ -28,9 +125,29 @@ const OrderHistory = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleRepeat = useCallback(async (orderId) => {
+    setRepeating(orderId);
+    try {
+      const res = await repeatOrder(orderId);
+      await fetchCart();
+      setRepeatResult(res.data);
+    } catch (err) {
+      alert(err.response?.data?.message || "Could not repeat order.");
+    } finally {
+      setRepeating(null);
+    }
+  }, [fetchCart]);
+
   return (
     <>
       <Navbar />
+      {repeatResult && (
+        <RepeatModal
+          result={repeatResult}
+          onClose={() => setRepeatResult(null)}
+          onGoToCart={() => { setRepeatResult(null); navigate("/cart"); }}
+        />
+      )}
       <div className="px-4 sm:px-8 py-8 max-w-3xl mx-auto">
         <button
           onClick={() => navigate(-1)}
@@ -80,7 +197,7 @@ const OrderHistory = () => {
                 className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm"
               >
                 {/* Header */}
-                <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex items-start justify-between gap-3 mb-1">
                   <div>
                     <p className="font-bold text-gray-900 dark:text-white text-base">
                       {order.restaurantName}
@@ -89,10 +206,15 @@ const OrderHistory = () => {
                       Order #{order.orderId}
                     </p>
                   </div>
-                  <span className={statusCls(order.status)}>
-                    {order.status}
-                  </span>
+                  <span className={statusCls(order.status)}>{order.status}</span>
                 </div>
+
+                {/* Date */}
+                {order.createdAt && (
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
+                    🕐 {formatDate(order.createdAt)}
+                  </p>
+                )}
 
                 {/* Items */}
                 <div className="flex flex-col gap-1.5 mb-3">
@@ -114,12 +236,19 @@ const OrderHistory = () => {
                   ))}
                 </div>
 
-                {/* Total */}
-                <div className="border-t border-gray-100 dark:border-gray-700 pt-3 flex justify-between font-extrabold text-gray-900 dark:text-white">
-                  <span>Total</span>
-                  <span className="text-orange-500">
-                    ₹{Number(order.totalAmount).toFixed(2)}
-                  </span>
+                {/* Footer: total + repeat */}
+                <div className="border-t border-gray-100 dark:border-gray-700 pt-3 flex items-center justify-between gap-3">
+                  <div className="font-extrabold text-gray-900 dark:text-white flex gap-2">
+                    <span>Total</span>
+                    <span className="text-orange-500">₹{Number(order.totalAmount).toFixed(2)}</span>
+                  </div>
+                  <button
+                    onClick={() => handleRepeat(order.orderId)}
+                    disabled={repeating === order.orderId}
+                    className="text-sm font-bold px-4 py-1.5 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40 border border-orange-200 dark:border-orange-800 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {repeating === order.orderId ? "Adding…" : "🔁 Repeat Order"}
+                  </button>
                 </div>
               </div>
             ))}

@@ -1,10 +1,10 @@
 package com.JustEat.dto.response;
 
-import com.JustEat.entity.Restaurant;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,6 +12,7 @@ import java.util.UUID;
 @Setter
 @Builder
 public class OrderResponse {
+
     private Long orderId;
     private String restaurantName;
     private UUID restaurantId;
@@ -19,4 +20,5 @@ public class OrderResponse {
     private String status;
 
     private List<OrderItemResponse> items;
+    private LocalDateTime createdAt;
 }

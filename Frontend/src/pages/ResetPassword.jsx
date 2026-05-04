@@ -44,7 +44,7 @@ const ResetPassword = () => {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Invalid or expired token. Please request a new reset link."
+          "Invalid or expired token. Please request a new reset link.",
       );
     } finally {
       setLoading(false);

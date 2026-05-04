@@ -7,9 +7,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class OrderItemResponse {
-    private String name;
-    private int quantity;
-    private Double price;
+public class RepeatedItem {
     private Long menuItemId;
+    private int quantity;
+    private String name;
+
+    private Double oldPrice;
+    private Double newPrice;
 }

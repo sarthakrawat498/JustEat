@@ -8,8 +8,12 @@ import com.JustEat.entity.OrderItem;
 import java.util.List;
 
 public class OrderMapper {
-    public static OrderResponse toResponse(Order order){
-        List<OrderItemResponse> items = order.getOrderItems() == null ? List.of() : order.getOrderItems()
+
+    public static OrderResponse toResponse(Order order) {
+
+        List<OrderItemResponse> items = order.getOrderItems() == null
+                ? List.of()
+                : order.getOrderItems()
                 .stream()
                 .map(OrderMapper::toItemResponse)
                 .toList();
@@ -21,14 +25,16 @@ public class OrderMapper {
                 .totalAmount(order.getTotalAmount())
                 .status(order.getStatus().name())
                 .items(items)
+                .createdAt(order.getCreatedAt())
                 .build();
     }
-    public static OrderItemResponse toItemResponse(OrderItem item){
+
+    public static OrderItemResponse toItemResponse(OrderItem item) {
         return OrderItemResponse.builder()
                 .name(item.getMenuItem().getName())
                 .quantity(item.getQuantity())
                 .price(item.getPrice())
-                .menutItemId(item.getMenuItem().getId())
+                .menuItemId(item.getMenuItem().getId())
                 .build();
     }
 }

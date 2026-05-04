@@ -13,6 +13,7 @@ import com.JustEat.exception.BadRequestException;
 import com.JustEat.repository.CartItemRepository;
 import com.JustEat.repository.CartRepository;
 import com.JustEat.service.CartService;
+import com.JustEat.service.helper.CartHelper;
 import com.JustEat.service.helper.EntityFetcher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -75,7 +76,7 @@ public class CartServiceImpl implements CartService {
         cartItem.setPrice(menuItem.getPrice() * newQuantity);
         cartItemRepository.save(cartItem);
 
-        updateCartTotal(cart);
+        CartHelper.updateCartTotal(cart);
         cartRepository.save(cart);
     }
 
@@ -138,7 +139,7 @@ public class CartServiceImpl implements CartService {
         }
 
         //re calculate total
-        updateCartTotal(cart);
+        CartHelper.updateCartTotal(cart);
         cartRepository.save(cart);
     }
 
@@ -151,18 +152,9 @@ public class CartServiceImpl implements CartService {
         CartItem cartItem = entityFetcher.getCartItem(cart,menuItem);
 
         cart.getItems().remove(cartItem);
-        updateCartTotal(cart);
+        CartHelper.updateCartTotal(cart);
 
         if(cart.getItems().isEmpty())cart.setRestaurant(null);
         cartRepository.save(cart);
-    }
-
-    //helper function
-    private void updateCartTotal(Cart cart) {
-        double total = cart.getItems().stream()
-                .mapToDouble(item -> item.getPrice() != null ? item.getPrice() : 0.0)
-                .sum();
-
-        cart.setTotalAmount(total);
     }
 }
