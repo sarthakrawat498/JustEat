@@ -1,0 +1,73 @@
+services:
+
+  # ── PostgreSQL database ────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: justeat-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: justeat
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"          # expose so you can still connect from a local client
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d justeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Spring Boot backend ───────────────────────────────────────────────────
+  backend:
+    build:
+      context: .             # uses the Dockerfile in the same folder
+      dockerfile: Dockerfile
+      # Run: mvn package -DskipTests before docker compose up --build
+    container_name: justeat-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8090:8090"
+    environment:
+      # Server
+      SERVER_PORT: 8090
+
+      # Database — override host from localhost to the db service name
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/justeat
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: root
+
+      # JPA
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+      # Cloudinary
+      CLOUDINARY_CLOUD_NAME: dv481bgup
+      CLOUDINARY_API_KEY: 566726593582423
+      CLOUDINARY_API_SECRET: HpRtZox6YkXKUw8h8MtQJWWw5QA
+
+      # Frontend URL (used in password-reset emails)
+      FRONTEND_URL: http://localhost:5173
+
+      # JWT
+      JWT_SECRET: "1234567890-abcdefghijklmnopqrstuvwxyz"
+      JWT_EXPIRATION: 86400000
+
+      # Swagger
+      SPRINGDOC_SWAGGER_UI_PATH: /api-docs
+      SPRINGDOC_API_DOCS_PATH: /api-docs/json
+
+      # Email
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: justeatapplication@gmail.com
+      SPRING_MAIL_PASSWORD: prqerigxerbswjhc
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+
+volumes:
+  postgres_data:
