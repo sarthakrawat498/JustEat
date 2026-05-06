@@ -29,6 +29,7 @@ public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final EntityFetcher entityFetcher;
+    // Adds a menu item to the user's cart; clears cart first if from a different restaurant
     @Transactional
     @Override
     public void addToCart(AddToCartRequest request, UUID userId) {
@@ -80,6 +81,7 @@ public class CartServiceImpl implements CartService {
         cartRepository.save(cart);
     }
 
+    // Returns the user's current cart; returns an empty cart response if the cart is empty
     @Override
     public CartResponse getCart(UUID userId) {
         User user = entityFetcher.getUser(userId);
@@ -111,6 +113,7 @@ public class CartServiceImpl implements CartService {
                 .build();
     }
 
+    // Updates quantity of an existing cart item; removes the item if quantity is set to 0
     @Transactional
     @Override
     public void updateCartItem(UpdateCartItemRequest request, UUID userId) {
@@ -143,6 +146,7 @@ public class CartServiceImpl implements CartService {
         cartRepository.save(cart);
     }
 
+    // Removes a specific item from the cart and recalculates the total
     @Transactional
     @Override
     public void removeItem(Long menuItemId, UUID userId) {

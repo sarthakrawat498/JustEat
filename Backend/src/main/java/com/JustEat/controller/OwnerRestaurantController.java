@@ -17,6 +17,7 @@ import java.util.UUID;
 public class OwnerRestaurantController {
     private final RestaurantService restaurantService;
 
+    // PATCH /owner/restaurants/{id}/status — changes a restaurant's status (OPEN / CLOSED)
     @PatchMapping("/{id}/status")
     public void updateStatus(@PathVariable UUID id, @RequestBody Map<String,String> body){
         UUID ownerId = SecurityUtils.getCurrentUserId();

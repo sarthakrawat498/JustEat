@@ -25,6 +25,7 @@ import java.util.UUID;
 public class RestaurantServiceImpl implements RestaurantService {
     private final RestaurantRepository restaurantRepository;
     private final EntityFetcher entityFetcher;
+    // Creates a new restaurant and assigns the currently authenticated user as its owner
     @Override
     public Restaurant createRestaurant(CreateRestaurantRequest request) {
         //get current user from jwt
@@ -42,6 +43,7 @@ public class RestaurantServiceImpl implements RestaurantService {
         return restaurantRepository.save(restaurant);
     }
 
+    // Returns all open restaurants, optionally filtered by location
     @Override
     public List<RestaurantResponse> getAllRestaurants(Location location) {
         List<Restaurant> restaurants;
@@ -59,18 +61,21 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .toList();
     }
 
+    // Fetches a single restaurant by its public ID and verifies it is open
     public RestaurantResponse getRestaurant(UUID restaurantId){
         Restaurant restaurant = entityFetcher.getRestaurant(restaurantId);
         validateRestaurantOpen(restaurant);
         return RestaurantMapper.toResponse(restaurant);
     }
 
+    // Throws an exception if the restaurant is not currently open
     private void validateRestaurantOpen(Restaurant restaurant) {
         if (restaurant.getStatus() != RestaurantStatus.OPEN) {
             throw new BadRequestException("Restaurant is not available");
         }
     }
 
+    // Returns all restaurants owned by the currently authenticated owner
     @Override
     public List<RestaurantResponse> getMyRestaurants() {
         UUID ownerId = SecurityUtils.getCurrentUserId();
@@ -80,6 +85,7 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .toList();
     }
 
+    // Updates the banner image of a restaurant after verifying the caller is its owner
     @Override
     public RestaurantResponse updateRestaurantImage(UUID restaurantId, String imageUrl) {
         UUID ownerId = SecurityUtils.getCurrentUserId();
@@ -91,6 +97,7 @@ public class RestaurantServiceImpl implements RestaurantService {
         return RestaurantMapper.toResponse(restaurantRepository.save(restaurant));
     }
 
+    // Changes the open/closed status of a restaurant after verifying ownership
     @Override
     public void updateRestaurantStatus(UUID restaurantId, RestaurantStatus status, UUID ownerId) {
         User owner = entityFetcher.getUser(ownerId);
@@ -101,6 +108,7 @@ public class RestaurantServiceImpl implements RestaurantService {
         restaurant.setStatus(status);
         restaurantRepository.save(restaurant);
     }
+    // Searches open restaurants by keyword (name), location, and/or cuisine type
     @Override
     public List<RestaurantResponse> searchRestaurants(String keyword,
                                                       Location location,

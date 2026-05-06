@@ -171,8 +171,15 @@ const RestaurantDetail = () => {
                           </div>
                         )}
                         <div className="p-3">
-                          <div className="font-bold text-sm text-gray-900 dark:text-white leading-tight">
-                            {item.name}
+                          <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                            <span className="font-bold text-sm text-gray-900 dark:text-white leading-tight">
+                              {item.name}
+                            </span>
+                            {item.mostlyOrdered && (
+                              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-700">
+                                🔥 Mostly Ordered
+                              </span>
+                            )}
                           </div>
                           {item.description && (
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
@@ -247,9 +254,16 @@ const RestaurantDetail = () => {
                       {/* Info */}
                       <div className="p-4 flex flex-col gap-2 flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <span className="font-bold text-base text-gray-900 dark:text-white leading-tight">
-                            {item.name}
-                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap flex-1">
+                            <span className="font-bold text-base text-gray-900 dark:text-white leading-tight">
+                              {item.name}
+                            </span>
+                            {item.mostlyOrdered && (
+                              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-700">
+                                🔥 Mostly Ordered
+                              </span>
+                            )}
+                          </div>
                           {item.isSpecial && (
                             <span className="flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border border-yellow-300 dark:border-yellow-700">
                               Chef&apos;s Special

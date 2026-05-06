@@ -506,6 +506,11 @@ const ManageRestaurant = () => {
                           Special
                         </span>
                       )}
+                      {item.mostlyOrdered && (
+                        <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-700 px-2 py-0.5 rounded-full font-semibold">
+                          🔥 Mostly Ordered
+                        </span>
+                      )}
                       {item.dietaryRestriction && (
                         <span
                           className={`text-xs border px-2 py-0.5 rounded-full font-semibold ${dietaryColor[item.dietaryRestriction] || ""}`}

@@ -36,12 +36,14 @@ public class UserServiceImpl implements UserService {
     private final UserPreferenceRepository userPreferenceRepository;
     private final RestaurantRepository restaurantRepository;
 
+    // Returns profile info for the currently logged-in user
     @Override
     public UserResponse getCurrentUser(UUID publicId) {
         User user = entityFetcher.getUser(publicId);
         return UserMapper.ToResponse(user);
     }
 
+    // Updates only the non-null fields of the user's profile
     @Override
     public UserResponse updateUser(UUID publicId, UpdateUserRequest request) {
         User user = entityFetcher.getUser(publicId);
@@ -55,6 +57,7 @@ public class UserServiceImpl implements UserService {
         return UserMapper.ToResponse(updated);
     }
 
+    // Creates or updates the user's saved cuisine and dietary preferences
     @Override
     @Transactional
     public UserPreferenceResponse savePreference(UUID userId, UserPreferenceRequest request) {
@@ -75,6 +78,7 @@ public class UserServiceImpl implements UserService {
         return toPreferenceResponse(pref);
     }
 
+    // Returns the user's saved preferences, or empty lists if none are saved yet
     @Override
     public UserPreferenceResponse getPreference(UUID userId) {
         User user = entityFetcher.getUser(userId);
@@ -86,6 +90,7 @@ public class UserServiceImpl implements UserService {
                         .build());
     }
 
+    // Returns up to 10 recommended open restaurants scored by cuisine match (×2) + rating; falls back to top-rated if no preferences saved
     @Override
     public List<RestaurantResponse> getRecommendations(UUID userId) {
         User user = entityFetcher.getUser(userId);
@@ -130,6 +135,7 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    // Converts a UserPreference entity into the response DTO, defaulting to empty lists for nulls
     private UserPreferenceResponse toPreferenceResponse(UserPreference pref) {
         return UserPreferenceResponse.builder()
                 .favouriteCuisines(pref.getFavouriteCuisines() != null

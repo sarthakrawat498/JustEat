@@ -10,6 +10,7 @@ import com.JustEat.enums.RestaurantStatus;
 import com.JustEat.exception.BadRequestException;
 import com.JustEat.mapper.OrderMapper;
 import com.JustEat.repository.CartRepository;
+import com.JustEat.repository.MenuItemRepository;
 import com.JustEat.repository.OrderItemRepository;
 import com.JustEat.repository.OrderRepository;
 import com.JustEat.service.OrderService;
@@ -30,8 +31,10 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final MenuItemRepository menuItemRepository;
     private final EntityFetcher entityFetcher;
 
+    // Converts the user's cart into a new order, increments each item's orderCount, then clears the cart
     @Transactional
     @Override
     public void checkout(UUID userId) {
@@ -59,8 +62,12 @@ public class OrderServiceImpl implements OrderService {
             orderItem.setOrder(order);
             orderItem.setPrice(item.getPrice());
             orderItem.setQuantity(item.getQuantity());
-
             orderItemRepository.save(orderItem);
+
+            // Increment popularity counter
+            MenuItem menuItem = item.getMenuItem();
+            menuItem.setOrderCount((menuItem.getOrderCount() == null ? 0 : menuItem.getOrderCount()) + item.getQuantity());
+            menuItemRepository.save(menuItem);
         }
 
         cart.getItems().clear();
@@ -70,6 +77,7 @@ public class OrderServiceImpl implements OrderService {
         cartRepository.save(cart);
     }
 
+    // Returns all orders placed by the given customer, newest first
     @Override
     public List<OrderResponse> getUserOrders(UUID userId) {
         User user = entityFetcher.getUser(userId);
@@ -79,6 +87,7 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 
+    // Returns all orders for the restaurants owned by the given owner, newest first
     @Override
     public List<OrderResponse> getOwnerOrders(UUID ownerID) {
         User owner = entityFetcher.getUser(ownerID);
@@ -88,6 +97,7 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 
+    // Advances an order's status following the allowed sequence: PENDING → PREPARING → READY → COMPLETED
     @Transactional
     @Override
     public void updateOrderStatus(Long orderId, OrderStatus newStatus, UUID ownerId) {
@@ -104,6 +114,7 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(newStatus);
     }
 
+    // Re-adds all items from a past order into the user's cart, reporting added/unavailable/price-changed items
     @Transactional
     @Override
     public RepeatedOrderResponse repeatOrder(Long orderId, UUID userId) {
@@ -169,6 +180,7 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
+    // Submits a star rating for a completed order and recalculates the restaurant's average rating
     @Override
     @Transactional
     public void rateOrder(Long orderId, int ratingValue, UUID userId) {
@@ -204,6 +216,7 @@ public class OrderServiceImpl implements OrderService {
         order.setRatingGiven(true);
     }
 
+    // Builds a RepeatedItem summary from an OrderItem; newPrice is null when price hasn't changed
     private RepeatedItem buildItem(OrderItem orderItem, MenuItem menuItem, Double newPrice) {
         return RepeatedItem.builder()
                 .menuItemId(menuItem.getId())
@@ -213,6 +226,7 @@ public class OrderServiceImpl implements OrderService {
                 .newPrice(newPrice)
                 .build();
     }
+    // Ensures status changes follow the correct order flow; throws if the transition is invalid
     private void validateStatusTransition(OrderStatus current , OrderStatus next){
         switch (current){
             case PENDING -> {

@@ -4,6 +4,7 @@ import com.JustEat.dto.response.RestaurantResponse;
 import com.JustEat.entity.Restaurant;
 
 public class RestaurantMapper {
+    // Converts a Restaurant entity into its API response DTO
     public static RestaurantResponse toResponse(Restaurant restaurant){
         return RestaurantResponse.builder()
                 .publicId(restaurant.getPublicId())

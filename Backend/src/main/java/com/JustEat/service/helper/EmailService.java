@@ -13,6 +13,7 @@ public class EmailService {
 
     @Value("${frontend.url}")
     private String frontendUrl;
+    // Sends a password reset email to the user containing a link with their one-time token
     public void sendPasswordResetEmail(String to , String token){
         String link = frontendUrl + "/reset-password?token=" + token;
         SimpleMailMessage message = new SimpleMailMessage();

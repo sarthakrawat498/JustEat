@@ -9,6 +9,7 @@ import java.util.List;
 
 public class OrderMapper {
 
+    // Converts an Order entity (with its items) into the full order response DTO
     public static OrderResponse toResponse(Order order) {
 
         List<OrderItemResponse> items = order.getOrderItems() == null
@@ -30,6 +31,7 @@ public class OrderMapper {
                 .build();
     }
 
+    // Converts a single OrderItem into its response DTO
     public static OrderItemResponse toItemResponse(OrderItem item) {
         return OrderItemResponse.builder()
                 .name(item.getMenuItem().getName())

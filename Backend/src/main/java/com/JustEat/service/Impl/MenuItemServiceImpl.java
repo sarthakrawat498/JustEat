@@ -10,21 +10,26 @@ import com.JustEat.exception.BadRequestException;
 import com.JustEat.exception.ForbiddenException;
 import com.JustEat.mapper.MenuItemMapper;
 import com.JustEat.repository.MenuItemRepository;
+import com.JustEat.repository.OrderItemRepository;
 import com.JustEat.service.MenuItemService;
 import com.JustEat.service.helper.EntityFetcher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class MenuItemServiceImpl implements MenuItemService {
     private final MenuItemRepository menuItemRepository;
+    private final OrderItemRepository orderItemRepository;
     private final EntityFetcher entityFetcher;
 
+    // Adds a new menu item to the restaurant after verifying the caller is the owner
     @Override
     public MenuItemResponse addMenuItem(UUID restaurantId, CreateMenuItemRequest request, UUID userID) {
         Restaurant restaurant = entityFetcher.getRestaurant(restaurantId);
@@ -49,6 +54,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         return MenuItemMapper.toResponse(menuItemRepository.save(item));
     }
 
+    // Updates only the non-null fields of an existing menu item after verifying ownership
     @Override
     public MenuItemResponse updateMenuItem(UUID restaurantId, Long menuItemId, UpdateMenuItemRequest request, UUID userId) {
         Restaurant restaurant = entityFetcher.getRestaurant(restaurantId);
@@ -92,6 +98,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         return MenuItemMapper.toResponse(menuItemRepository.save(menuItem));
     }
 
+    // Deletes a menu item after verifying it belongs to the owner's restaurant
     @Override
     public void deleteMenuItem(UUID restaurantId, Long menuItemId, UUID userId) {
         Restaurant restaurant = entityFetcher.getRestaurant(restaurantId);
@@ -101,14 +108,31 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItemRepository.delete(menuItem);
     }
 
+    // Returns all available items for a restaurant, with live order counts and mostlyOrdered flags based on historical data
     @Override
     public List<MenuItemResponse> getMenu(UUID restaurantId) {
-        Restaurant restaurant = entityFetcher.getRestaurant(restaurantId);
-        return menuItemRepository
+        // Build a live frequency map from all historical OrderItems
+        Map<Long, Long> freqMap = new HashMap<>();
+        for (Object[] row : orderItemRepository.sumQuantityByMenuItemForRestaurant(restaurantId)) {
+            freqMap.put((Long) row[0], (Long) row[1]);
+        }
+
+        List<MenuItemResponse> items = menuItemRepository
                 .findByRestaurant_PublicIdAndIsAvailableTrue(restaurantId)
                 .stream()
-                .map(r -> MenuItemMapper.toResponse(r))
-                .toList();
+                .map(MenuItemMapper::toResponse)
+                .collect(java.util.stream.Collectors.toList());
+
+        if (!items.isEmpty() && !freqMap.isEmpty()) {
+            // Overlay live order counts
+            items.forEach(item -> item.setOrderCount(freqMap.getOrDefault(item.getId(), 0L).intValue()));
+
+            // Flag top 30% most ordered items (or anything above average if fewer than 3 items)
+            double avg = items.stream().mapToInt(MenuItemResponse::getOrderCount).average().orElse(0);
+            int threshold = (int) Math.max(1, avg);
+            items.forEach(item -> item.setMostlyOrdered(item.getOrderCount() >= threshold));
+        }
+        return items;
     }
     @Transactional
     @Override

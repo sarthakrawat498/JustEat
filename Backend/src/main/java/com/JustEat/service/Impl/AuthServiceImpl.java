@@ -34,6 +34,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private  final JwtUtil jwtUtil;
 
+    // Registers a new user after checking for duplicate email and valid password
     public void register(RegisterRequest request){
         if(userRepository.existsByEmail(request.getEmail())){
             throw new BadRequestException("Email already exists");
@@ -56,6 +57,7 @@ public class AuthServiceImpl implements AuthService {
         }
         userRepository.save(user);
     }
+    // Verifies credentials and returns a JWT token with role and location info
     public AuthResponse login(LoginRequest request){
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(()-> new BadRequestException("Wrong email or password"));
@@ -72,6 +74,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    // Generates a reset token, saves its hash, and emails a reset link to the user
     @Transactional
     @Override
     public void forgotPassword(ForgotPasswordRequest request) {
@@ -93,6 +96,7 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    // Finds the matching valid token, validates the new password, and updates the user's password
     @Transactional
     @Override
     public void resetPassword(ResetPasswordRequest request) {

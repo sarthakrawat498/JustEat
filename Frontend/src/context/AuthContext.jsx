@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
     () => localStorage.getItem("profileName") || "",
   );
 
+  // Calls the login API, stores the token/role/location in localStorage, and updates context state
   const login = async (credentials) => {
     const res = await loginService(credentials);
     const { token: jwt, role: userRole, userId: uid, location } = res.data;
@@ -34,6 +35,7 @@ export const AuthProvider = ({ children }) => {
     return res;
   };
 
+  // Syncs the profile image URL and display name into both context state and localStorage
   const updateProfileCache = (url, name) => {
     const safeUrl = url || "";
     const safeName = name || "";
@@ -43,6 +45,7 @@ export const AuthProvider = ({ children }) => {
     setProfileName(safeName);
   };
 
+  // Clears all auth data from context and localStorage, logging the user out
   const logout = () => {
     logoutService();
     setToken(null);

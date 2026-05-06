@@ -23,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
     private final UserRepository userRepository;
+    // Runs on every request: extracts the Bearer token, validates it, and sets the Spring Security authentication context
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         final String header= request.getHeader("Authorization");

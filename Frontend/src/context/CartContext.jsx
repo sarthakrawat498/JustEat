@@ -18,6 +18,7 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(null); // { restaurantId, restaurantName, totalAmount, items[] }
   const [cartLoading, setCartLoading] = useState(false);
 
+  // Loads the latest cart from the backend and updates context state
   const fetchCart = useCallback(async () => {
     setCartLoading(true);
     try {
@@ -30,6 +31,7 @@ export const CartProvider = ({ children }) => {
     }
   }, []);
 
+  // Adds an item to the cart then refreshes cart state
   const addToCart = useCallback(
     async (menuItemId, quantity = 1) => {
       await addToCartApi(menuItemId, quantity);
@@ -38,6 +40,7 @@ export const CartProvider = ({ children }) => {
     [fetchCart],
   );
 
+  // Sets a new quantity for a cart item; removes it if quantity is 0, then refreshes cart state
   const updateCartItem = useCallback(
     async (menuItemId, quantity) => {
       if (quantity === 0) {
@@ -50,6 +53,7 @@ export const CartProvider = ({ children }) => {
     [fetchCart],
   );
 
+  // Removes an item from the cart then refreshes cart state
   const removeCartItem = useCallback(
     async (menuItemId) => {
       await removeCartItemApi(menuItemId);
@@ -58,6 +62,7 @@ export const CartProvider = ({ children }) => {
     [fetchCart],
   );
 
+  // Resets the cart state to null (used after checkout)
   const clearCart = useCallback(() => {
     setCart(null);
   }, []);

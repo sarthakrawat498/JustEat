@@ -7,6 +7,7 @@ import com.JustEat.enums.Location;
 import com.JustEat.enums.Role;
 
 public class UserMapper {
+    // Converts a User entity into its API response DTO
     public static UserResponse ToResponse(User user){
         return UserResponse.builder()
                 .pubicId(user.getPublicId())

@@ -22,5 +22,8 @@ public class MenuItemResponse {
     private boolean available;
     @JsonProperty("isSpecial")
     private boolean isSpecial;
+    private int orderCount;
+    @JsonProperty("mostlyOrdered")
+    private boolean mostlyOrdered;
 }
 

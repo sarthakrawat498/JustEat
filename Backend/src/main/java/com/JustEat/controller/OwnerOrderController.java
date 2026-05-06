@@ -21,12 +21,14 @@ import java.util.UUID;
 public class OwnerOrderController {
     private final OrderService orderService;
     private final MenuItemService menuItemService;
+    // GET /owner/orders — returns all orders for the owner's restaurants
     @GetMapping("/orders")
     public List<OrderResponse> getOrders(){
         UUID ownerId = SecurityUtils.getCurrentUserId();
         return orderService.getOwnerOrders(ownerId);
     }
 
+    // PATCH /owner/orders/{id}/status — advances an order to the next status step
     @PatchMapping("/orders/{id}/status")
     public void updateStatus(@PathVariable Long id, @RequestBody Map<String,String> body){
         UUID ownerId = SecurityUtils.getCurrentUserId();
@@ -34,6 +36,7 @@ public class OwnerOrderController {
         orderService.updateOrderStatus(id,status,ownerId);
     }
 
+    // PATCH /owner/menu/{id}/availability — toggles a menu item's available flag
     @PatchMapping("/menu/{id}/availability")
     public void updateAvailability(@PathVariable Long id , @RequestBody Map<String,Boolean> body){
         UUID ownerID = SecurityUtils.getCurrentUserId();
