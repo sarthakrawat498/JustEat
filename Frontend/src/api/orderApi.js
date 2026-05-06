@@ -6,3 +6,5 @@ export const getOwnerOrders = () => api.get("/owner/orders");
 export const updateOrderStatus = (orderId, status) =>
   api.patch(`/owner/orders/${orderId}/status`, { status });
 export const repeatOrder = (orderId) => api.post(`/orders/${orderId}/repeat`);
+
+export const rateOrder = (orderId, rating) => api.post(`/orders/${orderId}/rate`, { rating });

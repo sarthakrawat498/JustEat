@@ -169,6 +169,41 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public void rateOrder(Long orderId, int ratingValue, UUID userId) {
+        User user = entityFetcher.getUser(userId);
+        Order order = entityFetcher.getOrder(orderId);
+
+        if (!order.getUser().getPublicId().equals(userId)) {
+            throw new BadRequestException("Not your order");
+        }
+
+        if (order.getStatus() != OrderStatus.COMPLETED) {
+            throw new BadRequestException("Order not completed");
+        }
+
+        if (order.isRatingGiven()) {
+            throw new BadRequestException("Order already rated");
+        }
+
+        if (ratingValue < 1 || ratingValue > 5) {
+            throw new BadRequestException("Rating must be between 1 and 5");
+        }
+
+        Restaurant restaurant = order.getRestaurant();
+
+        double currentAvg = restaurant.getRating();
+        int count = restaurant.getRatingCount();
+
+        double newAvg = ((currentAvg * count) + ratingValue) / (count + 1);
+
+        restaurant.setRating(newAvg);
+        restaurant.setRatingCount(count + 1);
+
+        order.setRatingGiven(true);
+    }
+
     private RepeatedItem buildItem(OrderItem orderItem, MenuItem menuItem, Double newPrice) {
         return RepeatedItem.builder()
                 .menuItemId(menuItem.getId())

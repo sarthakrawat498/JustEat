@@ -13,4 +13,5 @@ public interface OrderService {
     List<OrderResponse> getOwnerOrders(UUID ownerID);
     void updateOrderStatus(Long orderId, OrderStatus newStatus, UUID ownerId);
     RepeatedOrderResponse repeatOrder(Long orderId, UUID userId);
+    void rateOrder(Long orderId , int ratingValue, UUID userId);
 }

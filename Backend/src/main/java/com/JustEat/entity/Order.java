@@ -38,6 +38,8 @@ public class Order extends BaseEntity{
     @OneToMany(mappedBy = "order" , cascade = CascadeType.ALL)
     private List<OrderItem> orderItems;
 
+    @Column(nullable = false)
+    private boolean ratingGiven = false;
     @PrePersist
     public void generatePublicId() {
         if (publicId == null) {

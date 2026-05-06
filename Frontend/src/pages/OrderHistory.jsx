@@ -1,9 +1,10 @@
 ﻿import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { getUserOrders, repeatOrder } from "../api/orderApi";
+import { getUserOrders, repeatOrder, rateOrder } from "../api/orderApi";
 import { useCart } from "../context/CartContext";
 
+/* ---------- Helpers ---------- */
 const statusCls = (status) => {
   const base =
     "text-xs font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide";
@@ -28,10 +29,59 @@ const formatDate = (iso) => {
   });
 };
 
+/* ---------- Star Rating ---------- */
+const StarRating = ({ orderId, onRated }) => {
+  const [selected, setSelected] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleRate = async (star) => {
+    setSelected(star);
+    setSubmitting(true);
+    setError("");
+    try {
+      await rateOrder(orderId, star);
+      onRated(orderId);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to submit rating.");
+      setSelected(0);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5 font-semibold">
+        Rate this order
+      </p>
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            disabled={submitting}
+            onClick={() => handleRate(star)}
+            className="text-2xl leading-none bg-transparent border-none cursor-pointer p-0 disabled:opacity-50"
+          >
+            {star <= selected ? "⭐" : "☆"}
+          </button>
+        ))}
+        {submitting && (
+          <span className="ml-2 text-xs text-gray-400">Submitting…</span>
+        )}
+      </div>
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  );
+};
+
 /* ---------- Repeat Result Modal ---------- */
 const RepeatModal = ({ result, onClose, onGoToCart }) => {
-  const { addedItems = [], priceChangedItems = [], unavailableItems = [] } = result;
-
+  const {
+    addedItems = [],
+    priceChangedItems = [],
+    unavailableItems = [],
+  } = result;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6">
@@ -46,9 +96,16 @@ const RepeatModal = ({ result, onClose, onGoToCart }) => {
             </p>
             <div className="flex flex-col gap-1">
               {addedItems.map((item, i) => (
-                <div key={i} className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                  <span>{item.name} × {item.quantity}</span>
-                  <span className="font-semibold">₹{Number(item.oldPrice).toFixed(2)}</span>
+                <div
+                  key={i}
+                  className="flex justify-between text-sm text-gray-700 dark:text-gray-300"
+                >
+                  <span>
+                    {item.name} × {item.quantity}
+                  </span>
+                  <span className="font-semibold">
+                    ₹{Number(item.oldPrice).toFixed(2)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -62,11 +119,20 @@ const RepeatModal = ({ result, onClose, onGoToCart }) => {
             </p>
             <div className="flex flex-col gap-1">
               {priceChangedItems.map((item, i) => (
-                <div key={i} className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                  <span>{item.name} × {item.quantity}</span>
+                <div
+                  key={i}
+                  className="flex justify-between text-sm text-gray-700 dark:text-gray-300"
+                >
+                  <span>
+                    {item.name} × {item.quantity}
+                  </span>
                   <span className="font-semibold">
-                    <span className="line-through text-gray-400 mr-1">₹{Number(item.oldPrice).toFixed(2)}</span>
-                    <span className="text-orange-500">₹{Number(item.newPrice).toFixed(2)}</span>
+                    <span className="line-through text-gray-400 mr-1">
+                      ₹{Number(item.oldPrice).toFixed(2)}
+                    </span>
+                    <span className="text-orange-500">
+                      ₹{Number(item.newPrice).toFixed(2)}
+                    </span>
                   </span>
                 </div>
               ))}
@@ -81,7 +147,10 @@ const RepeatModal = ({ result, onClose, onGoToCart }) => {
             </p>
             <div className="flex flex-col gap-1">
               {unavailableItems.map((item, i) => (
-                <div key={i} className="text-sm text-gray-400 dark:text-gray-500 line-through">
+                <div
+                  key={i}
+                  className="text-sm text-gray-400 dark:text-gray-500 line-through"
+                >
                   {item.name} × {item.quantity}
                 </div>
               ))}
@@ -115,8 +184,8 @@ const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [repeating, setRepeating] = useState(null); // orderId being repeated
-  const [repeatResult, setRepeatResult] = useState(null); // modal data
+  const [repeating, setRepeating] = useState(null);
+  const [repeatResult, setRepeatResult] = useState(null);
 
   useEffect(() => {
     getUserOrders()
@@ -125,18 +194,30 @@ const OrderHistory = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleRepeat = useCallback(async (orderId) => {
-    setRepeating(orderId);
-    try {
-      const res = await repeatOrder(orderId);
-      await fetchCart();
-      setRepeatResult(res.data);
-    } catch (err) {
-      alert(err.response?.data?.message || "Could not repeat order.");
-    } finally {
-      setRepeating(null);
-    }
-  }, [fetchCart]);
+  const handleRepeat = useCallback(
+    async (orderId) => {
+      setRepeating(orderId);
+      try {
+        const res = await repeatOrder(orderId);
+        await fetchCart();
+        setRepeatResult(res.data);
+      } catch (err) {
+        alert(err.response?.data?.message || "Could not repeat order.");
+      } finally {
+        setRepeating(null);
+      }
+    },
+    [fetchCart],
+  );
+
+  // Mark order as rated in local state so star UI disappears immediately
+  const handleRated = useCallback((orderId) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.orderId === orderId ? { ...o, ratingGiven: true } : o,
+      ),
+    );
+  }, []);
 
   return (
     <>
@@ -145,7 +226,10 @@ const OrderHistory = () => {
         <RepeatModal
           result={repeatResult}
           onClose={() => setRepeatResult(null)}
-          onGoToCart={() => { setRepeatResult(null); navigate("/cart"); }}
+          onGoToCart={() => {
+            setRepeatResult(null);
+            navigate("/cart");
+          }}
         />
       )}
       <div className="px-4 sm:px-8 py-8 max-w-3xl mx-auto">
@@ -206,7 +290,9 @@ const OrderHistory = () => {
                       Order #{order.orderId}
                     </p>
                   </div>
-                  <span className={statusCls(order.status)}>{order.status}</span>
+                  <span className={statusCls(order.status)}>
+                    {order.status}
+                  </span>
                 </div>
 
                 {/* Date */}
@@ -240,16 +326,34 @@ const OrderHistory = () => {
                 <div className="border-t border-gray-100 dark:border-gray-700 pt-3 flex items-center justify-between gap-3">
                   <div className="font-extrabold text-gray-900 dark:text-white flex gap-2">
                     <span>Total</span>
-                    <span className="text-orange-500">₹{Number(order.totalAmount).toFixed(2)}</span>
+                    <span className="text-orange-500">
+                      ₹{Number(order.totalAmount).toFixed(2)}
+                    </span>
                   </div>
                   <button
                     onClick={() => handleRepeat(order.orderId)}
                     disabled={repeating === order.orderId}
                     className="text-sm font-bold px-4 py-1.5 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40 border border-orange-200 dark:border-orange-800 transition-colors cursor-pointer disabled:opacity-50"
                   >
-                    {repeating === order.orderId ? "Adding…" : "🔁 Repeat Order"}
+                    {repeating === order.orderId
+                      ? "Adding…"
+                      : "🔁 Repeat Order"}
                   </button>
                 </div>
+
+                {/* Rating — only for COMPLETED and not yet rated */}
+                {order.status === "COMPLETED" && !order.ratingGiven && (
+                  <StarRating orderId={order.orderId} onRated={handleRated} />
+                )}
+
+                {/* Already rated badge */}
+                {order.status === "COMPLETED" && order.ratingGiven && (
+                  <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                    <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
+                      ⭐ You rated this order
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
           </div>

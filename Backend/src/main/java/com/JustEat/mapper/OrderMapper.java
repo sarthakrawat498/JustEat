@@ -26,6 +26,7 @@ public class OrderMapper {
                 .status(order.getStatus().name())
                 .items(items)
                 .createdAt(order.getCreatedAt())
+                .ratingGiven(order.isRatingGiven())
                 .build();
     }
 

@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -31,10 +32,16 @@ public class OrderController {
     }
 
     @PostMapping("/{orderId}/repeat")
-    @PreAuthorize("hasRole('CUSTOMER')")
     public RepeatedOrderResponse repeatOrder(@PathVariable Long orderId) {
-
         UUID userId = SecurityUtils.getCurrentUserId();
         return orderService.repeatOrder(orderId, userId);
     }
+    @PostMapping("/{orderId}/rate")
+    public void rateOrder(@PathVariable Long orderId,
+                          @RequestBody Map<String, Integer> body) {
+
+        UUID userId = SecurityUtils.getCurrentUserId();
+        orderService.rateOrder(orderId, body.get("rating"), userId);
+    }
+
 }
