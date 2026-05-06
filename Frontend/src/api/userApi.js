@@ -10,3 +10,9 @@ export const updateMyProfile = (data) => {
     ...(profileUrl !== undefined ? { profileImageUrl: profileUrl } : {}),
   });
 };
+
+export const getPreferences = () => api.get("/users/me/preferences");
+
+export const savePreferences = (data) => api.put("/users/me/preferences", data);
+
+export const getRecommendations = () => api.get("/users/me/recommendations");

@@ -1,11 +1,34 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
-import { getMyProfile, updateMyProfile } from "../api/userApi";
+import {
+  getMyProfile,
+  updateMyProfile,
+  getPreferences,
+  savePreferences,
+} from "../api/userApi";
 import ImageUpload from "../components/ImageUpload";
 import { useAuth } from "../context/AuthContext";
 
 const LOCATIONS = ["NOIDA", "DELHI", "GURGAON"];
 const GENDERS = ["MALE", "FEMALE", "OTHER"];
+const CUISINES = [
+  "INDIAN",
+  "CHINESE",
+  "JAPANESE",
+  "ITALIAN",
+  "MEXICAN",
+  "CONTINENTAL",
+  "FRENCH",
+  "FAST_FOOD",
+];
+const DIETARY_OPTIONS = [
+  "VEG",
+  "NON_VEG",
+  "EGG",
+  "VEGAN",
+  "JAIN",
+  "GLUTEN_FREE",
+];
 
 const inputCls =
   "w-full px-3 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors";
@@ -13,7 +36,7 @@ const labelCls =
   "text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider";
 
 const Profile = () => {
-  const { updateProfileCache } = useAuth();
+  const { updateProfileCache, role } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
@@ -24,23 +47,41 @@ const Profile = () => {
   const [formError, setFormError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
+  // Preferences state
+  const [prefs, setPrefs] = useState({
+    favouriteCuisines: [],
+    dietaryRestrictions: [],
+  });
+  const [prefSubmitting, setPrefSubmitting] = useState(false);
+  const [prefSuccess, setPrefSuccess] = useState("");
+
   useEffect(() => {
-    getMyProfile()
-      .then((res) => {
-        setProfile(res.data);
-        updateProfileCache(res.data.profileUrl, res.data.firstName);
+    const calls = [getMyProfile()];
+    if (role === "CUSTOMER") calls.push(getPreferences());
+
+    Promise.all(calls)
+      .then(([profileRes, prefRes]) => {
+        const p = profileRes.data;
+        setProfile(p);
+        updateProfileCache(p.profileUrl, p.firstName);
         setForm({
-          firstName: res.data.firstName || "",
-          lastName: res.data.lastName || "",
-          phoneNumber: res.data.phoneNumber || "",
-          gender: res.data.gender || "",
-          location: res.data.location || "",
-          profileUrl: res.data.profileUrl || "",
+          firstName: p.firstName || "",
+          lastName: p.lastName || "",
+          phoneNumber: p.phoneNumber || "",
+          gender: p.gender || "",
+          location: p.location || "",
+          profileUrl: p.profileUrl || "",
         });
+        if (prefRes) {
+          setPrefs({
+            favouriteCuisines: prefRes.data.favouriteCuisines || [],
+            dietaryRestrictions: prefRes.data.dietaryRestrictions || [],
+          });
+        }
       })
       .catch(() => setPageError("Failed to load profile."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [role]);
 
   const handleChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -62,6 +103,40 @@ const Profile = () => {
       setSubmitting(false);
     }
   };
+
+  const handleSavePreferences = async () => {
+    setPrefSuccess("");
+    setPrefSubmitting(true);
+    try {
+      const res = await savePreferences(prefs);
+      setPrefs({
+        favouriteCuisines: res.data.favouriteCuisines || [],
+        dietaryRestrictions: res.data.dietaryRestrictions || [],
+      });
+      setPrefSuccess("Preferences saved!");
+      setTimeout(() => setPrefSuccess(""), 3000);
+    } catch {
+      /* silent */
+    } finally {
+      setPrefSubmitting(false);
+    }
+  };
+
+  const toggleCuisine = (c) =>
+    setPrefs((p) => ({
+      ...p,
+      favouriteCuisines: p.favouriteCuisines.includes(c)
+        ? p.favouriteCuisines.filter((x) => x !== c)
+        : [...p.favouriteCuisines, c],
+    }));
+
+  const toggleDietary = (d) =>
+    setPrefs((p) => ({
+      ...p,
+      dietaryRestrictions: p.dietaryRestrictions.includes(d)
+        ? p.dietaryRestrictions.filter((x) => x !== d)
+        : [...p.dietaryRestrictions, d],
+    }));
 
   if (loading) {
     return (
@@ -284,6 +359,78 @@ const Profile = () => {
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* ── Preferences card (customers only) ── */}
+        {role === "CUSTOMER" && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mt-6">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+              My Preferences
+            </h2>
+
+            {/* Favourite Cuisines */}
+            <div className="mb-5">
+              <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                Favourite Cuisines
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {CUISINES.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => toggleCuisine(c)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all cursor-pointer ${
+                      prefs.favouriteCuisines.includes(c)
+                        ? "bg-orange-500 border-orange-500 text-white"
+                        : "bg-transparent border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-orange-400"
+                    }`}
+                  >
+                    {c.replace(/_/g, " ")}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dietary Restrictions */}
+            <div className="mb-5">
+              <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                Dietary Restrictions
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {DIETARY_OPTIONS.map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => toggleDietary(d)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all cursor-pointer ${
+                      prefs.dietaryRestrictions.includes(d)
+                        ? "bg-green-500 border-green-500 text-white"
+                        : "bg-transparent border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-green-400"
+                    }`}
+                  >
+                    {d.replace(/_/g, " ")}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Save button */}
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={handleSavePreferences}
+                disabled={prefSubmitting}
+                className="bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-all cursor-pointer border-none"
+              >
+                {prefSubmitting ? "Saving..." : "Save Preferences"}
+              </button>
+              {prefSuccess && (
+                <span className="text-green-600 dark:text-green-400 text-sm font-medium">
+                  {prefSuccess}
+                </span>
+              )}
+            </div>
           </div>
         )}
       </div>

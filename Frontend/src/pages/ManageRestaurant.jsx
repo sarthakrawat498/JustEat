@@ -160,19 +160,8 @@ const MenuItemForm = ({
               </select>
             </div>
           </div>
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              name="isSpecial"
-              checked={form.isSpecial}
-              onChange={handleChange}
-              className="w-4 h-4 accent-orange-500"
-            />
-            <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
-              Mark as Chef&apos;s Special
-            </span>
-          </label>
         </div>
+
         <div className="mt-5 flex gap-3">
           <button
             type="submit"

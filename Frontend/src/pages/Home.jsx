@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { getRestaurants, searchRestaurants } from "../api/restaurantApi";
+import { getRecommendations } from "../api/userApi";
 import { useAuth } from "../context/AuthContext";
 
 const LOCATIONS = ["ALL", "NOIDA", "DELHI", "GURGAON"];
@@ -38,13 +39,14 @@ const isSearching = (name, location, cuisine) =>
   name.trim() !== "" || location !== "ALL" || cuisine !== "ALL";
 
 const Home = () => {
-  const { userLocation } = useAuth();
+  const { userLocation, role } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [location, setLocation] = useState(userLocation || "ALL");
   const [cuisine, setCuisine] = useState("ALL");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [recommendations, setRecommendations] = useState([]);
 
   const fetchRestaurants = useCallback((n, loc, cui) => {
     setLoading(true);
@@ -64,6 +66,15 @@ const Home = () => {
       .catch(() => setError("Failed to load restaurants."))
       .finally(() => setLoading(false));
   }, []);
+
+  // Fetch recommendations for customers
+  useEffect(() => {
+    if (role === "CUSTOMER") {
+      getRecommendations()
+        .then((res) => setRecommendations(res.data || []))
+        .catch(() => {});
+    }
+  }, [role]);
 
   // Debounce name input
   useEffect(() => {
@@ -86,6 +97,45 @@ const Home = () => {
         <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
           Restaurants near you
         </h1>
+
+        {/* Recommendations banner */}
+        {role === "CUSTOMER" && recommendations.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">
+              ⭐ Recommended for You
+            </h2>
+            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-orange-300">
+              {recommendations.map((r) => (
+                <Link
+                  key={r.id}
+                  to={`/restaurant/${r.publicId}`}
+                  className="flex-shrink-0 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                >
+                  {r.imageUrl ? (
+                    <img
+                      src={r.imageUrl}
+                      alt={r.name}
+                      className="w-full h-28 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-28 bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 flex items-center justify-center text-3xl">
+                      🍽️
+                    </div>
+                  )}
+                  <div className="p-3">
+                    <p className="font-bold text-sm text-gray-800 dark:text-gray-100 truncate">
+                      {r.name}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      {r.cuisineType?.replace(/_/g, " ")}
+                    </p>
+                    <span className={statusCls(r.status)}>{r.status || "OPEN"}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Search + filter row */}
         <div className="flex flex-wrap gap-3 mb-8">
