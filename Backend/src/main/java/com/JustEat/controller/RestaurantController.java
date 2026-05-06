@@ -3,6 +3,7 @@ package com.JustEat.controller;
 import com.JustEat.dto.request.CreateRestaurantRequest;
 import com.JustEat.dto.response.RestaurantResponse;
 import com.JustEat.entity.Restaurant;
+import com.JustEat.enums.CuisineType;
 import com.JustEat.enums.Location;
 import com.JustEat.service.RestaurantService;
 import jakarta.validation.Valid;
@@ -47,5 +48,13 @@ public class RestaurantController {
     public RestaurantResponse updateImage(@PathVariable UUID publicId,
                                           @RequestBody Map<String, String> body) {
         return restaurantService.updateRestaurantImage(publicId, body.get("imageUrl"));
+    }
+
+    @GetMapping("/search")
+    public List<RestaurantResponse> search(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Location location,
+            @RequestParam(required = false) CuisineType cuisine) {
+        return restaurantService.searchRestaurants(keyword, location, cuisine);
     }
 }

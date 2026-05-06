@@ -1,4 +1,4 @@
-import api from "./axiosConfig";
+﻿import api from "./axiosConfig";
 
 export const getRestaurants = (location) =>
   api.get("/restaurants", { params: location ? { location } : {} });
@@ -14,3 +14,6 @@ export const updateRestaurantImage = (publicId, imageUrl) =>
 
 export const updateRestaurantStatus = (publicId, status) =>
   api.patch(`/owner/restaurants/${publicId}/status`, { status });
+
+export const searchRestaurants = (params) =>
+  api.get("/restaurants/search", { params });

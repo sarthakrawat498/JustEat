@@ -5,6 +5,7 @@ import com.JustEat.dto.response.RestaurantResponse;
 import com.JustEat.entity.MenuItem;
 import com.JustEat.entity.Restaurant;
 import com.JustEat.entity.User;
+import com.JustEat.enums.CuisineType;
 import com.JustEat.enums.Location;
 import com.JustEat.enums.RestaurantStatus;
 import com.JustEat.exception.BadRequestException;
@@ -100,4 +101,15 @@ public class RestaurantServiceImpl implements RestaurantService {
         restaurant.setStatus(status);
         restaurantRepository.save(restaurant);
     }
+    @Override
+    public List<RestaurantResponse> searchRestaurants(String keyword,
+                                                      Location location,
+                                                      CuisineType cuisine) {
+        if (keyword != null && keyword.isBlank()) keyword = null;
+        return restaurantRepository.searchRestaurants(keyword, cuisine, location)
+                .stream()
+                .map(RestaurantMapper::toResponse)
+                .toList();
+    }
+
 }

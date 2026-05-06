@@ -139,6 +139,71 @@ const RestaurantDetail = () => {
               )}
             </div>
 
+            {/* Today's Special */}
+            {menu.filter((item) => item.isSpecial && item.available !== false)
+              .length > 0 && (
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">⭐</span>
+                  <h2 className="text-lg font-extrabold text-gray-900 dark:text-white">
+                    Today&apos;s Special
+                  </h2>
+                </div>
+                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                  {menu
+                    .filter(
+                      (item) => item.isSpecial && item.available !== false,
+                    )
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex-shrink-0 w-56 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl overflow-hidden shadow-md"
+                      >
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className="w-full h-32 object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-32 flex items-center justify-center text-4xl bg-yellow-100 dark:bg-yellow-900/30">
+                            🍴
+                          </div>
+                        )}
+                        <div className="p-3">
+                          <div className="font-bold text-sm text-gray-900 dark:text-white leading-tight">
+                            {item.name}
+                          </div>
+                          {item.description && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
+                              {item.description}
+                            </p>
+                          )}
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-base font-extrabold text-orange-500">
+                              ₹{Number(item.price).toFixed(2)}
+                            </span>
+                            {role === "CUSTOMER" && (
+                              <button
+                                onClick={() => handleAddToCart(item)}
+                                disabled={addingItemId === item.id}
+                                className="text-xs font-bold bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white px-3 py-1 rounded-lg border-none cursor-pointer transition-colors"
+                              >
+                                {addingItemId === item.id
+                                  ? "…"
+                                  : addedItemId === item.id
+                                    ? "✓"
+                                    : "+ Add"}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
             <div className="text-xl font-bold mb-4 pb-2 border-b-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">
               Menu
             </div>

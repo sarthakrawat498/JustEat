@@ -1,10 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { getRestaurants } from "../api/restaurantApi";
+import { getRestaurants, searchRestaurants } from "../api/restaurantApi";
 import { useAuth } from "../context/AuthContext";
 
 const LOCATIONS = ["ALL", "NOIDA", "DELHI", "GURGAON"];
+const CUISINES = [
+  "ALL",
+  "INDIAN",
+  "CHINESE",
+  "JAPANESE",
+  "ITALIAN",
+  "MEXICAN",
+  "CONTINENTAL",
+  "FRENCH",
+  "FAST_FOOD",
+];
 
 const statusCls = (status) => {
   const base =
@@ -20,21 +31,53 @@ const statusCls = (status) => {
 const tagCls =
   "text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-50 dark:bg-orange-900/20 text-orange-500 border border-orange-200 dark:border-orange-700 capitalize";
 
+const selectCls =
+  "border-2 border-gray-200 dark:border-gray-600 rounded-full text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:outline-none focus:border-orange-500 transition-colors px-4 py-2 cursor-pointer appearance-none pr-8 font-semibold";
+
+const isSearching = (name, location, cuisine) =>
+  name.trim() !== "" || location !== "ALL" || cuisine !== "ALL";
+
 const Home = () => {
   const { userLocation } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [location, setLocation] = useState(userLocation || "ALL");
+  const [cuisine, setCuisine] = useState("ALL");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  const fetchRestaurants = useCallback((n, loc, cui) => {
     setLoading(true);
     setError("");
-    getRestaurants(location === "ALL" ? null : location)
+
+    const searching = isSearching(n, loc, cui);
+    const promise = searching
+      ? searchRestaurants({
+          ...(n.trim() && { keyword: n.trim() }),
+          ...(loc !== "ALL" && { location: loc }),
+          ...(cui !== "ALL" && { cuisine: cui }),
+        })
+      : getRestaurants(null);
+
+    promise
       .then((res) => setRestaurants(res.data))
       .catch(() => setError("Failed to load restaurants."))
       .finally(() => setLoading(false));
-  }, [location]);
+  }, []);
+
+  // Debounce name input
+  useEffect(() => {
+    const t = setTimeout(() => fetchRestaurants(name, location, cuisine), 350);
+    return () => clearTimeout(t);
+  }, [name, location, cuisine, fetchRestaurants]);
+
+  const handleClear = () => {
+    setName("");
+    setLocation("ALL");
+    setCuisine("ALL");
+  };
+
+  const hasFilters = isSearching(name, location, cuisine);
 
   return (
     <>
@@ -44,20 +87,66 @@ const Home = () => {
           Restaurants near you
         </h1>
 
-        <div className="flex gap-3 flex-wrap mb-8">
-          {LOCATIONS.map((loc) => (
+        {/* Search + filter row */}
+        <div className="flex flex-wrap gap-3 mb-8">
+          {/* Name search */}
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="Search restaurants…"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-full text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors"
+            />
+          </div>
+
+          {/* Location dropdown */}
+          <select
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className={
+              selectCls +
+              (location !== "ALL"
+                ? " border-orange-500 text-orange-600 dark:text-orange-400"
+                : "")
+            }
+          >
+            {LOCATIONS.map((loc) => (
+              <option key={loc} value={loc}>
+                📍 {loc}
+              </option>
+            ))}
+          </select>
+
+          {/* Cuisine dropdown */}
+          <select
+            value={cuisine}
+            onChange={(e) => setCuisine(e.target.value)}
+            className={
+              selectCls +
+              (cuisine !== "ALL"
+                ? " border-orange-500 text-orange-600 dark:text-orange-400"
+                : "")
+            }
+          >
+            {CUISINES.map((cui) => (
+              <option key={cui} value={cui}>
+                🍽 {cui.replace("_", " ")}
+              </option>
+            ))}
+          </select>
+
+          {hasFilters && (
             <button
-              key={loc}
-              onClick={() => setLocation(loc)}
-              className={`border-2 font-semibold text-sm px-4 py-1.5 rounded-full cursor-pointer transition-all ${
-                location === loc
-                  ? "bg-orange-500 border-orange-500 text-white"
-                  : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-orange-500 hover:text-orange-500"
-              }`}
+              onClick={handleClear}
+              className="text-sm font-semibold text-orange-500 hover:text-orange-600 border-2 border-orange-200 dark:border-orange-700 px-4 py-2 rounded-full transition-colors cursor-pointer bg-transparent"
             >
-              {loc}
+              Clear
             </button>
-          ))}
+          )}
         </div>
 
         {loading && (
@@ -78,11 +167,11 @@ const Home = () => {
             <h3 className="text-xl font-semibold mb-2 text-gray-700 dark:text-gray-300">
               No restaurants found
             </h3>
-            <p>Try a different location or check back later.</p>
+            <p>Try a different name, location or cuisine.</p>
           </div>
         )}
 
-        {!loading && !error && (
+        {!loading && !error && restaurants.length > 0 && (
           <div
             className="grid gap-6"
             style={{

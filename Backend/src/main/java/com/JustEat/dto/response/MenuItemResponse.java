@@ -3,6 +3,7 @@ package com.JustEat.dto.response;
 
 import com.JustEat.enums.CuisineType;
 import com.JustEat.enums.DietaryRestriction;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,5 +20,7 @@ public class MenuItemResponse {
     private CuisineType cuisineType;
     private DietaryRestriction dietaryRestriction;
     private boolean available;
+    @JsonProperty("isSpecial")
     private boolean isSpecial;
 }
+

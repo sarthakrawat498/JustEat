@@ -297,6 +297,25 @@ const ManageRestaurant = () => {
     }
   };
 
+  const handleToggleSpecial = async (item) => {
+    setTogglingId(item.id);
+    try {
+      const res = await updateMenuItem(publicId, item.id, {
+        isSpecial: !item.isSpecial,
+      });
+      setMenuItems((prev) =>
+        prev.map((i) => (i.id === item.id ? res.data : i)),
+      );
+      flash(
+        `${item.name} ${!item.isSpecial ? "marked as Special ⭐" : "removed from Specials"}.`,
+      );
+    } catch {
+      /* ignore */
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   const handleToggle = async (item) => {
     setTogglingId(item.id);
     try {
@@ -538,6 +557,23 @@ const ManageRestaurant = () => {
                         : item.available
                           ? "On"
                           : "Off"}
+                    </button>
+
+                    <button
+                      onClick={() => handleToggleSpecial(item)}
+                      disabled={togglingId === item.id}
+                      title={
+                        item.isSpecial
+                          ? "Remove from Today's Special"
+                          : "Mark as Today's Special"
+                      }
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-lg border-2 transition-all cursor-pointer bg-transparent disabled:opacity-40 ${
+                        item.isSpecial
+                          ? "border-yellow-400 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                          : "border-gray-300 dark:border-gray-600 text-gray-400 hover:border-yellow-400 hover:text-yellow-600"
+                      }`}
+                    >
+                      {togglingId === item.id ? "..." : "⭐"}
                     </button>
 
                     <button

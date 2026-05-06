@@ -229,4 +229,14 @@ public class OrderServiceImpl implements OrderService {
             }
         }
     }
+
+    @Override
+    public List<OrderResponse> searchOrders(UUID userId, String keyword) {
+
+        return orderRepository
+                .findByUser_PublicIdAndRestaurant_NameContainingIgnoreCase(userId, keyword)
+                .stream()
+                .map(OrderMapper::toResponse)
+                .toList();
+    }
 }
