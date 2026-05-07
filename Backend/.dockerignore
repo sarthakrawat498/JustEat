@@ -1,0 +1,8 @@
+.mvn
+.git
+.vscode
+.idea
+*.log
+.DS_Store
+src/main/resources/application-local.properties
+src/main/resources/application.properties

@@ -29,6 +29,11 @@ Backend/src/main/resources/application.properties
 .DS_Store
 Thumbs.db
 
+# ─── Docker ──────────────────────────────────────────────────────────────────
+docker-compose.yml
+.env
+.env.local
+
 # ─── Misc ─────────────────────────────────────────────────────────────────────
 *.local
 *.suo
