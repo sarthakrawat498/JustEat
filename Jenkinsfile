@@ -18,14 +18,21 @@ pipeline {
                 }
             }
         }
-        stage('Build Docker Images') {
-            steps {
-                script {
-                    bat 'docker compose build'
-                }
-            }
+        stage('Build Frontend') {
+      steps {
+        dir('Frontend') {
+          bat 'npm ci'
+          bat 'npm run build'
         }
+      }
     }
+    stage('Archive Artifacts') {
+      steps {
+        archiveArtifacts artifacts: 'Backend/target/*.jar', fingerprint: true
+        archiveArtifacts artifacts: 'Frontend/dist/**', fingerprint: true
+      }
+    }
+  }
 
     post {
         always{
