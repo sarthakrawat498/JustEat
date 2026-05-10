@@ -139,7 +139,7 @@ const CreateRestaurant = () => {
               </div>
 
               <ImageUpload
-                label="Restaurant Photo"
+                label="Restaurant Photo (Max 10MB)"
                 value={form.imageUrl}
                 onChange={(url) => setForm((f) => ({ ...f, imageUrl: url }))}
                 placeholder="Click to upload restaurant photo"

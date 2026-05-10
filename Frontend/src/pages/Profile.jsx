@@ -329,7 +329,7 @@ const Profile = () => {
                 </div>
 
                 <ImageUpload
-                  label="Profile Photo"
+                  label="Profile Photo (Max 10MB)"
                   value={form.profileUrl}
                   onChange={(url) =>
                     setForm((f) => ({ ...f, profileUrl: url }))

@@ -119,7 +119,7 @@ const MenuItemForm = ({
             />
           </div>
           <ImageUpload
-            label="Item Image"
+            label="Item Image (Max 10MB)"
             value={form.imageUrl}
             onChange={(url) => setForm((f) => ({ ...f, imageUrl: url }))}
             placeholder="Click to upload item photo"

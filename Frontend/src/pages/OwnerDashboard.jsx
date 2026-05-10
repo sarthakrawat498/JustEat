@@ -164,7 +164,9 @@ const OwnerDashboard = () => {
                       </div>
                     ) : (
                       <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
-                        {r.imageUrl ? "Change Photo" : "Add Photo"}
+                        {r.imageUrl
+                          ? "Change Photo (Max 10MB)"
+                          : "Add Photo (Max 10MB)"}
                       </span>
                     )}
                     <input
