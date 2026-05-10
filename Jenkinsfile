@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven'
-        nodejs 'NodeJS'
+        maven 'maven3'
     }
 
     environment {
@@ -29,8 +28,7 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 dir('Frontend') {
-                    sh 'npm install'
-                    sh 'npm run build'
+                    sh 'docker run --rm -v "$PWD":/app -w /app node:20-alpine sh -c "npm ci && npm run build"'
                 }
             }
         }
@@ -46,7 +44,6 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    sh 'docker compose down'
                     sh 'docker compose up -d'
                 }
             }
