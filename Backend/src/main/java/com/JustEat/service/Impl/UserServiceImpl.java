@@ -45,6 +45,7 @@ public class UserServiceImpl implements UserService {
 
     // Updates only the non-null fields of the user's profile
     @Override
+    @Transactional
     public UserResponse updateUser(UUID publicId, UpdateUserRequest request) {
         User user = entityFetcher.getUser(publicId);
         if (request.getFirstName() != null) user.setFirstName(request.getFirstName());

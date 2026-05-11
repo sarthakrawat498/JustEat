@@ -1,12 +1,16 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   login as loginService,
   logout as logoutService,
 } from "../auth/authService";
+import { getMyProfile } from "../api/userApi";
+import { isTokenExpired } from "../utils/tokenUtils";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+  const navigate = useNavigate();
   const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [role, setRole] = useState(() => localStorage.getItem("role"));
   const [userId, setUserId] = useState(() => localStorage.getItem("userId"));
@@ -44,6 +48,47 @@ export const AuthProvider = ({ children }) => {
     setProfileUrl(safeUrl);
     setProfileName(safeName);
   };
+
+  // Loads the latest profile data once after login/refresh so the navbar can show the user name immediately
+  useEffect(() => {
+    if (!token) return;
+
+    if (isTokenExpired(token)) {
+      logoutService();
+      setToken(null);
+      setRole(null);
+      setUserId(null);
+      setUserLocation(null);
+      setProfileUrl("");
+      setProfileName("");
+      localStorage.removeItem("userLocation");
+      localStorage.removeItem("profileUrl");
+      localStorage.removeItem("profileName");
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    if (profileName) return;
+
+    let cancelled = false;
+
+    const loadProfile = async () => {
+      try {
+        const res = await getMyProfile();
+        if (cancelled) return;
+        const p = res.data;
+        updateProfileCache(p.profileUrl, p.firstName);
+      } catch {
+        // Keep the cached fallback initials if profile fetch fails.
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, profileName, navigate]);
 
   // Clears all auth data from context and localStorage, logging the user out
   const logout = () => {

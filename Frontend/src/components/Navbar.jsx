@@ -32,115 +32,118 @@ const Navbar = () => {
   const initial = profileName ? profileName[0].toUpperCase() : "U";
 
   return (
-    <nav className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm h-16 flex items-center justify-between px-8">
-      <Link
-        to="/"
-        className="text-2xl font-extrabold text-orange-500 tracking-tight no-underline"
-      >
-        Just<span className="text-gray-900 dark:text-white">Eat</span>
-      </Link>
-
-      <div className="flex items-center gap-4">
-        {role === "OWNER" && (
-          <Link to="/create-restaurant">
-            <button className="border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white font-semibold text-sm px-4 py-2 rounded-lg transition-all cursor-pointer bg-transparent">
-              + Add Restaurant
-            </button>
-          </Link>
-        )}
-
-        {role === "CUSTOMER" && (
-          <Link to="/orders">
-            <button
-              title="My Orders"
-              className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/30 hover:text-orange-500 w-9 h-9 rounded-lg transition-all flex items-center justify-center cursor-pointer border-none text-base"
-            >
-              📋
-            </button>
-          </Link>
-        )}
-
-        {role === "OWNER" && (
-          <Link to="/owner/orders">
-            <button className="border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-orange-500 hover:text-orange-500 font-semibold text-sm px-4 py-2 rounded-lg transition-all cursor-pointer bg-transparent">
-              Orders
-            </button>
-          </Link>
-        )}
-
-        {role === "CUSTOMER" && (
-          <Link to="/cart" className="relative">
-            <button
-              title="View Cart"
-              className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-orange-50 dark:hover:bg-orange-900/30 hover:text-orange-500 w-9 h-9 rounded-lg transition-all flex items-center justify-center cursor-pointer border-none text-base relative"
-            >
-              🛒
-              {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-bold w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full flex items-center justify-center leading-none px-1">
-                  {cartItemCount > 99 ? "99+" : cartItemCount}
-                </span>
-              )}
-            </button>
-          </Link>
-        )}
-
-        <button
-          onClick={toggle}
-          title={dark ? "Switch to light mode" : "Switch to dark mode"}
-          className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 w-9 h-9 rounded-lg transition-all flex items-center justify-center cursor-pointer border-none text-base"
+    <nav className="sticky top-0 z-50 border-b border-gray-200/80 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur supports-backdrop-filter:bg-white/80 shadow-sm">
+      <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        <Link
+          to="/"
+          className="text-2xl font-extrabold tracking-tight text-orange-500 no-underline shrink-0"
         >
-          {dark ? "☀️" : "🌙"}
-        </button>
+          Just<span className="text-gray-900 dark:text-white">Eat</span>
+        </Link>
 
-        {/* Avatar dropdown */}
-        <div className="relative" ref={dropdownRef}>
+        <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto whitespace-nowrap">
+          {role === "OWNER" && (
+            <Link to="/create-restaurant" className="shrink-0 no-underline">
+              <button className="inline-flex items-center gap-2 rounded-xl border border-orange-500 bg-orange-500 px-3 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md cursor-pointer whitespace-nowrap">
+                + <span>Add Restaurant</span>
+              </button>
+            </Link>
+          )}
+
+          {role === "CUSTOMER" && (
+            <Link to="/orders" className="shrink-0 no-underline">
+              <button
+                title="My Orders"
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition-all duration-200 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-orange-700 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 cursor-pointer whitespace-nowrap shadow-sm"
+              >
+                <span>📋</span>
+                <span>My Orders</span>
+              </button>
+            </Link>
+          )}
+
+          {role === "OWNER" && (
+            <Link to="/owner/orders" className="shrink-0 no-underline">
+              <button className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition-all duration-200 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-orange-700 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 cursor-pointer whitespace-nowrap shadow-sm">
+                <span>Orders</span>
+              </button>
+            </Link>
+          )}
+
+          {role === "CUSTOMER" && (
+            <Link to="/cart" className="relative shrink-0 no-underline">
+              <button
+                title="View Cart"
+                className="relative inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition-all duration-200 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-orange-700 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 cursor-pointer whitespace-nowrap shadow-sm"
+              >
+                <span>🛒</span>
+                <span>My Cart</span>
+                {cartItemCount > 0 && (
+                  <span className="absolute -right-2 -top-2 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold leading-none text-white shadow-md">
+                    {cartItemCount > 99 ? "99+" : cartItemCount}
+                  </span>
+                )}
+              </button>
+            </Link>
+          )}
+
           <button
-            onClick={() => setDropdownOpen((o) => !o)}
-            className="w-9 h-9 rounded-full overflow-hidden border-2 border-orange-300 dark:border-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 cursor-pointer flex-shrink-0 bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center"
-            title="Account"
+            onClick={toggle}
+            title={dark ? "Switch to light mode" : "Switch to dark mode"}
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition-all duration-200 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-orange-700 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 cursor-pointer whitespace-nowrap shadow-sm"
           >
-            {profileUrl ? (
-              <img
-                src={profileUrl}
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-sm font-bold text-orange-500">
-                {initial}
-              </span>
-            )}
+            <span>{dark ? "☀️" : "🌙"}</span>
+            <span className="hidden sm:inline">{dark ? "Light" : "Dark"}</span>
           </button>
 
-          {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-1 z-50">
-              {profileName && (
-                <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Signed in as
-                  </p>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                    {profileName}
-                  </p>
-                </div>
+          {/* Avatar dropdown */}
+          <div className="relative shrink-0" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen((o) => !o)}
+              className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-orange-300 bg-orange-100 text-orange-500 shadow-sm transition-all duration-200 hover:scale-105 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400 dark:border-orange-600 dark:bg-orange-900/30 cursor-pointer shrink-0"
+              title="Account"
+            >
+              {profileUrl ? (
+                <img
+                  src={profileUrl}
+                  alt="Profile"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-sm font-bold">{initial}</span>
               )}
-              <button
-                onClick={() => {
-                  setDropdownOpen(false);
-                  navigate("/profile");
-                }}
-                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer bg-transparent border-none"
-              >
-                Edit Profile
-              </button>
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer bg-transparent border-none"
-              >
-                Logout
-              </button>
-            </div>
-          )}
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-xl z-50 dark:border-gray-700 dark:bg-gray-800">
+                {profileName && (
+                  <div className="border-b border-gray-100 px-4 py-2 dark:border-gray-700">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Signed in as
+                    </p>
+                    <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                      {profileName}
+                    </p>
+                  </div>
+                )}
+                <button
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    navigate("/profile");
+                  }}
+                  className="w-full border-none bg-transparent px-4 py-2.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer"
+                >
+                  Edit Profile
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full border-none bg-transparent px-4 py-2.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 cursor-pointer"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </nav>
