@@ -5,14 +5,18 @@ import com.JustEat.dto.request.UserPreferenceRequest;
 import com.JustEat.dto.response.RestaurantResponse;
 import com.JustEat.dto.response.UserPreferenceResponse;
 import com.JustEat.dto.response.UserResponse;
+import com.JustEat.entity.MenuItem;
+import com.JustEat.entity.Order;
 import com.JustEat.entity.Restaurant;
 import com.JustEat.entity.User;
 import com.JustEat.entity.UserPreference;
 import com.JustEat.enums.CuisineType;
 import com.JustEat.enums.DietaryRestriction;
+import com.JustEat.enums.OrderStatus;
 import com.JustEat.enums.RestaurantStatus;
 import com.JustEat.mapper.RestaurantMapper;
 import com.JustEat.mapper.UserMapper;
+import com.JustEat.repository.OrderRepository;
 import com.JustEat.repository.RestaurantRepository;
 import com.JustEat.repository.UserPreferenceRepository;
 import com.JustEat.repository.UserRepository;
@@ -23,8 +27,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,6 +42,7 @@ public class UserServiceImpl implements UserService {
     private final EntityFetcher entityFetcher;
     private final UserPreferenceRepository userPreferenceRepository;
     private final RestaurantRepository restaurantRepository;
+    private final OrderRepository orderRepository;
 
     // Returns profile info for the currently logged-in user
     @Override
@@ -98,11 +106,19 @@ public class UserServiceImpl implements UserService {
 
         // Only open restaurants
         List<Restaurant> allOpen = restaurantRepository.findByStatus(RestaurantStatus.OPEN);
+        if (allOpen.isEmpty()) {
+            return List.of();
+        }
 
         UserPreference pref = userPreferenceRepository.findByUser(user).orElse(null);
+        List<Order> completedOrders = orderRepository.findByUserAndStatusOrderByCreatedAtDesc(user, OrderStatus.COMPLETED);
 
-        if (pref == null ||
-                (pref.getFavouriteCuisines().isEmpty() && pref.getDietaryRestrictions().isEmpty())) {
+        boolean hasPreference = pref != null &&
+                ((pref.getFavouriteCuisines() != null && !pref.getFavouriteCuisines().isEmpty()) ||
+                        (pref.getDietaryRestrictions() != null && !pref.getDietaryRestrictions().isEmpty()));
+        boolean hasHistory = !completedOrders.isEmpty();
+
+        if (!hasPreference && !hasHistory) {
             // No preferences saved — return top-rated open restaurants
             return allOpen.stream()
                     .filter(r -> r.getRating() != null && r.getRating() > 0)
@@ -112,28 +128,115 @@ public class UserServiceImpl implements UserService {
                     .collect(Collectors.toList());
         }
 
-        List<CuisineType> cuisines = pref.getFavouriteCuisines();
+        List<CuisineType> cuisines = hasPreference && pref.getFavouriteCuisines() != null
+                ? pref.getFavouriteCuisines()
+                : Collections.emptyList();
+        List<DietaryRestriction> dietaryRestrictions = hasPreference && pref.getDietaryRestrictions() != null
+                ? pref.getDietaryRestrictions()
+                : Collections.emptyList();
+        Map<Long, Long> restaurantFrequency = buildRestaurantFrequency(completedOrders);
+        Map<CuisineType, Long> cuisineFrequency = buildCuisineFrequency(completedOrders);
 
-        // Score each restaurant: cuisine match + rating boost
+        long maxRestaurantFrequency = restaurantFrequency.values().stream()
+                .mapToLong(Long::longValue)
+                .max()
+                .orElse(1L);
+        long maxCuisineFrequency = cuisineFrequency.values().stream()
+                .mapToLong(Long::longValue)
+                .max()
+                .orElse(1L);
+
+        // Score each restaurant using preferences, order history, and rating.
         return allOpen.stream()
-                .map(r -> {
-                    double score = 0;
-                    if (!cuisines.isEmpty()) {
-                        long matches = r.getCuisineTypes().stream()
-                                .filter(cuisines::contains)
-                                .count();
-                        score += matches * 2.0;
-                    }
-                    if (r.getRating() != null && r.getRating() > 0) {
-                        score += r.getRating();
-                    }
-                    return new Object[]{r, score};
-                })
+                .map(r -> new Object[]{r, scoreRestaurant(
+                        r,
+                        cuisines,
+                        dietaryRestrictions,
+                        restaurantFrequency,
+                        cuisineFrequency,
+                        maxRestaurantFrequency,
+                        maxCuisineFrequency
+                )})
                 .filter(pair -> (double) pair[1] > 0)
                 .sorted((a, b) -> Double.compare((double) b[1], (double) a[1]))
                 .limit(10)
                 .map(pair -> RestaurantMapper.toResponse((Restaurant) pair[0]))
                 .collect(Collectors.toList());
+    }
+
+    private Map<Long, Long> buildRestaurantFrequency(List<Order> completedOrders) {
+        Map<Long, Long> frequency = new HashMap<>();
+        for (Order order : completedOrders) {
+            if (order.getRestaurant() != null && order.getRestaurant().getId() != null) {
+                frequency.merge(order.getRestaurant().getId(), 1L, Long::sum);
+            }
+        }
+        return frequency;
+    }
+
+    private Map<CuisineType, Long> buildCuisineFrequency(List<Order> completedOrders) {
+        Map<CuisineType, Long> frequency = new HashMap<>();
+        for (Order order : completedOrders) {
+            if (order.getRestaurant() == null || order.getRestaurant().getCuisineTypes() == null) {
+                continue;
+            }
+            for (CuisineType cuisine : order.getRestaurant().getCuisineTypes()) {
+                frequency.merge(cuisine, 1L, Long::sum);
+            }
+        }
+        return frequency;
+    }
+
+    private double scoreRestaurant(Restaurant restaurant,
+                                   List<CuisineType> favouriteCuisines,
+                                   List<DietaryRestriction> dietaryRestrictions,
+                                   Map<Long, Long> restaurantFrequency,
+                                   Map<CuisineType, Long> cuisineFrequency,
+                                   long maxRestaurantFrequency,
+                                   long maxCuisineFrequency) {
+        double score = 0.0;
+        List<CuisineType> restaurantCuisines = restaurant.getCuisineTypes() != null
+                ? restaurant.getCuisineTypes()
+                : Collections.emptyList();
+
+        if (!favouriteCuisines.isEmpty() && !restaurantCuisines.isEmpty()) {
+            long matches = restaurantCuisines.stream()
+                    .filter(favouriteCuisines::contains)
+                    .count();
+            score += matches * 3.0;
+        }
+
+        if (!cuisineFrequency.isEmpty() && !restaurantCuisines.isEmpty()) {
+            long historicalCuisineWeight = restaurantCuisines.stream()
+                    .mapToLong(c -> cuisineFrequency.getOrDefault(c, 0L))
+                    .sum();
+            score += ((double) historicalCuisineWeight / maxCuisineFrequency) * 2.5;
+        }
+
+        // Score based on dietary restrictions match
+        if (!dietaryRestrictions.isEmpty()) {
+            List<MenuItem> menuItems = restaurant.getMenuItems() != null
+                    ? restaurant.getMenuItems()
+                    : Collections.emptyList();
+            long dietaryMatches = menuItems.stream()
+                    .filter(item -> item.getDietaryRestriction() != null &&
+                            dietaryRestrictions.contains(item.getDietaryRestriction()))
+                    .count();
+            if (!menuItems.isEmpty()) {
+                score += ((double) dietaryMatches / menuItems.size()) * 2.0;
+            }
+        }
+
+        Long repeatCount = restaurant.getId() == null ? null : restaurantFrequency.get(restaurant.getId());
+        if (repeatCount != null && repeatCount > 0) {
+            score += ((double) repeatCount / maxRestaurantFrequency) * 2.0;
+        }
+
+        if (restaurant.getRating() != null && restaurant.getRating() > 0) {
+            score += restaurant.getRating() * 0.8;
+        }
+
+        return score;
     }
 
     // Converts a UserPreference entity into the response DTO, defaulting to empty lists for nulls

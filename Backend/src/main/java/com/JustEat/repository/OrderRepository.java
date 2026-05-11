@@ -2,6 +2,7 @@ package com.JustEat.repository;
 
 import com.JustEat.entity.Order;
 import com.JustEat.entity.User;
+import com.JustEat.enums.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +14,7 @@ import java.util.UUID;
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findByUserOrderByCreatedAtDesc(User user);
+    List<Order> findByUserAndStatusOrderByCreatedAtDesc(User user, OrderStatus status);
     Optional<Order> findByPublicId(UUID publicId);
     List<Order> findByRestaurant_OwnerOrderByCreatedAtDesc(User owner) ;
     List<Order> findByUser_PublicIdAndRestaurant_NameContainingIgnoreCase(
