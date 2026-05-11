@@ -107,9 +107,9 @@ const Home = () => {
             <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-orange-300">
               {recommendations.map((r) => (
                 <Link
-                  key={r.id}
+                  key={r.publicId}
                   to={`/restaurant/${r.publicId}`}
-                  className="flex-shrink-0 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                  className="shrink-0 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all"
                 >
                   {r.imageUrl ? (
                     <img
@@ -118,7 +118,7 @@ const Home = () => {
                       className="w-full h-28 object-cover"
                     />
                   ) : (
-                    <div className="w-full h-28 bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 flex items-center justify-center text-3xl">
+                    <div className="w-full h-28 bg-linear-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 flex items-center justify-center text-3xl">
                       🍽️
                     </div>
                   )}
@@ -127,9 +127,12 @@ const Home = () => {
                       {r.name}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {r.cuisineType?.replace(/_/g, " ")}
+                      {(r.cuisineTypes || [])[0]?.replace(/_/g, " ") ||
+                        "Various"}
                     </p>
-                    <span className={statusCls(r.status)}>{r.status || "OPEN"}</span>
+                    <span className={statusCls(r.restaurantStatus)}>
+                      {r.restaurantStatus || "OPEN"}
+                    </span>
                   </div>
                 </Link>
               ))}
@@ -140,7 +143,7 @@ const Home = () => {
         {/* Search + filter row */}
         <div className="flex flex-wrap gap-3 mb-8">
           {/* Name search */}
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <div className="relative flex-1 min-w-50 max-w-sm">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
               🔍
             </span>
@@ -244,7 +247,7 @@ const Home = () => {
                     }}
                   />
                 ) : (
-                  <div className="w-full h-44 bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 flex items-center justify-center text-5xl">
+                  <div className="w-full h-44 bg-linear-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 flex items-center justify-center text-5xl">
                     🍴
                   </div>
                 )}
