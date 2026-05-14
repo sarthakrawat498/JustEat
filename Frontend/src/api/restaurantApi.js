@@ -21,6 +21,10 @@ export const updateRestaurantImage = (publicId, imageUrl) =>
 export const updateRestaurantStatus = (publicId, status) =>
   api.patch(`/owner/restaurants/${publicId}/status`, { status });
 
+// Deletes a restaurant owned by the current owner
+export const deleteRestaurant = (publicId) =>
+  api.delete(`/owner/restaurants/${publicId}`);
+
 // Searches restaurants by keyword, location, and/or cuisine type
 export const searchRestaurants = (params) =>
   api.get("/restaurants/search", { params });

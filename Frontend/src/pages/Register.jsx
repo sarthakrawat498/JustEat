@@ -10,6 +10,13 @@ const inputCls =
 const labelCls =
   "text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider";
 
+const isStrongPassword = (password) =>
+  password.length >= 6 &&
+  /[A-Z]/.test(password) &&
+  /[a-z]/.test(password) &&
+  /\d/.test(password) &&
+  /[@#$%^&+=]/.test(password);
+
 const Register = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -31,6 +38,14 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!isStrongPassword(form.password)) {
+      setError(
+        "Password must be at least 6 characters and include uppercase, lowercase, number and special character (@#$%^&+=).",
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       await registerService(form);
@@ -38,16 +53,21 @@ const Register = () => {
         form.role === "OWNER" ? "/login?next=owner-dashboard" : "/login",
       );
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Registration failed. Please try again.",
-      );
+      const data = err.response?.data;
+      const serverMessage =
+        (typeof data === "string" && data) ||
+        data?.message ||
+        data?.error ||
+        err.message;
+
+      setError(serverMessage || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-white dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-orange-50 to-white dark:from-gray-900 dark:to-gray-800 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-10 w-full max-w-lg">
         <div className="text-3xl font-extrabold text-orange-500 mb-1">
           Just<span className="text-gray-900 dark:text-white">Eat</span>
@@ -145,13 +165,17 @@ const Register = () => {
               <input
                 type="password"
                 name="password"
-                placeholder="Min. 6 characters"
+                placeholder="Min. 6 with A-z, 0-9, special"
                 value={form.password}
                 onChange={handleChange}
                 required
                 minLength={6}
                 className={inputCls}
               />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Must include uppercase, lowercase, number and special character
+                (@#$%^&+=).
+              </p>
             </div>
 
             <div className="flex flex-col gap-1.5">

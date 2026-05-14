@@ -19,4 +19,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             UUID userId,
             String keyword
     );
+
+    boolean existsByRestaurant_PublicId(UUID restaurantPublicId);
 }

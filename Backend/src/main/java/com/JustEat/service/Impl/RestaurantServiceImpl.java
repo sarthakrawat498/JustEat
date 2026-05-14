@@ -9,7 +9,11 @@ import com.JustEat.enums.CuisineType;
 import com.JustEat.enums.Location;
 import com.JustEat.enums.RestaurantStatus;
 import com.JustEat.exception.BadRequestException;
+import com.JustEat.exception.ForbiddenException;
 import com.JustEat.mapper.RestaurantMapper;
+import com.JustEat.repository.CartRepository;
+import com.JustEat.repository.MenuItemRepository;
+import com.JustEat.repository.OrderRepository;
 import com.JustEat.repository.RestaurantRepository;
 import com.JustEat.service.RestaurantService;
 import com.JustEat.service.helper.EntityFetcher;
@@ -24,6 +28,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RestaurantServiceImpl implements RestaurantService {
     private final RestaurantRepository restaurantRepository;
+    private final OrderRepository orderRepository;
+    private final CartRepository cartRepository;
+    private final MenuItemRepository menuItemRepository;
     private final EntityFetcher entityFetcher;
     // Creates a new restaurant and assigns the currently authenticated user as its owner
     @Override
@@ -108,6 +115,26 @@ public class RestaurantServiceImpl implements RestaurantService {
         restaurant.setStatus(status);
         restaurantRepository.save(restaurant);
     }
+
+    // Deletes a restaurant for its owner when there is no order history for that restaurant
+    @Transactional
+    @Override
+    public void deleteRestaurant(UUID restaurantId, UUID ownerId) {
+        Restaurant restaurant = entityFetcher.getRestaurant(restaurantId);
+
+        if (!restaurant.getOwner().getPublicId().equals(ownerId)) {
+            throw new ForbiddenException("Not authorized to delete this restaurant");
+        }
+
+        if (orderRepository.existsByRestaurant_PublicId(restaurantId)) {
+            throw new BadRequestException("Cannot delete restaurant with existing orders");
+        }
+
+        cartRepository.deleteByRestaurant_PublicId(restaurantId);
+        menuItemRepository.deleteByRestaurant_PublicId(restaurantId);
+        restaurantRepository.delete(restaurant);
+    }
+
     // Searches open restaurants by keyword (name), location, and/or cuisine type
     @Override
     public List<RestaurantResponse> searchRestaurants(String keyword,

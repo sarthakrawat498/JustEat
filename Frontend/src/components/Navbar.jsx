@@ -41,7 +41,7 @@ const Navbar = () => {
           Just<span className="text-gray-900 dark:text-white">Eat</span>
         </Link>
 
-        <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto whitespace-nowrap">
+        <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3 overflow-x-auto md:overflow-x-visible whitespace-nowrap">
           {role === "OWNER" && (
             <Link to="/create-restaurant" className="shrink-0 no-underline">
               <button className="inline-flex items-center gap-2 rounded-xl border border-orange-500 bg-orange-500 px-3 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-md cursor-pointer whitespace-nowrap">
@@ -79,7 +79,7 @@ const Navbar = () => {
                 <span>🛒</span>
                 <span>My Cart</span>
                 {cartItemCount > 0 && (
-                  <span className="absolute -right-2 -top-2 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold leading-none text-white shadow-md">
+                  <span className="absolute right-1 top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold leading-none text-white shadow-md">
                     {cartItemCount > 99 ? "99+" : cartItemCount}
                   </span>
                 )}
@@ -100,7 +100,7 @@ const Navbar = () => {
           <div className="relative shrink-0" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen((o) => !o)}
-              className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-orange-300 bg-orange-100 text-orange-500 shadow-sm transition-all duration-200 hover:scale-105 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400 dark:border-orange-600 dark:bg-orange-900/30 cursor-pointer shrink-0"
+              className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-orange-300 bg-orange-100 text-orange-500 shadow-sm transition-all duration-200 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400 dark:border-orange-600 dark:bg-orange-900/30 cursor-pointer shrink-0"
               title="Account"
             >
               {profileUrl ? (

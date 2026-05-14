@@ -24,4 +24,11 @@ public class OwnerRestaurantController {
         RestaurantStatus status = RestaurantStatus.valueOf(body.get("status"));
         restaurantService.updateRestaurantStatus(id,status,ownerId);
     }
+
+    // DELETE /owner/restaurants/{id} — deletes a restaurant owned by the logged-in owner
+    @DeleteMapping("/{id}")
+    public void deleteRestaurant(@PathVariable UUID id) {
+        UUID ownerId = SecurityUtils.getCurrentUserId();
+        restaurantService.deleteRestaurant(id, ownerId);
+    }
 }

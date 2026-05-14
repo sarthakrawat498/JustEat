@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   login as loginService,
   logout as logoutService,
@@ -10,7 +9,6 @@ import { isTokenExpired } from "../utils/tokenUtils";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const navigate = useNavigate();
   const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [role, setRole] = useState(() => localStorage.getItem("role"));
   const [userId, setUserId] = useState(() => localStorage.getItem("userId"));
@@ -64,7 +62,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("userLocation");
       localStorage.removeItem("profileUrl");
       localStorage.removeItem("profileName");
-      navigate("/login", { replace: true });
+      window.location.replace("/login");
       return;
     }
 
@@ -88,7 +86,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, [token, profileName, navigate]);
+  }, [token, profileName]);
 
   // Clears all auth data from context and localStorage, logging the user out
   const logout = () => {
